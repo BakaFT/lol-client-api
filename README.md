@@ -25,7 +25,7 @@ and the following dependency
 <dependency>
     <groupId>com.github.hawolt</groupId>
     <artifactId>league-client-api</artifactId>
-    <version>53ea885</version>
+    <version>main-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -58,7 +58,7 @@ public class Preset {
         try {
             VirtualRiotClient virtualRiotClient = virtualRiotClientInstance.login(args[0], args[1], MultiFactorSupplier.blank);
             VirtualLeagueClientInstance virtualLeagueClientInstance = virtualRiotClient.createVirtualLeagueClientInstance();
-            CompletableFuture<VirtualLeagueClient> virtualLeagueClientFuture = virtualLeagueClientInstance.login(true, true, true, false);
+            CompletableFuture<VirtualLeagueClient> virtualLeagueClientFuture = virtualLeagueClientInstance.login(false, true, true, false);
             virtualLeagueClientFuture.whenComplete(((virtualLeagueClient, throwable) -> {
                 if (throwable != null) throwable.printStackTrace();
                 else {
