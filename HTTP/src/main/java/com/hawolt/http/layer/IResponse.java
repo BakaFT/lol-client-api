@@ -26,7 +26,9 @@ public interface IResponse {
         }
         String content = Diffuser.vaporize(new String(response.request()));
         builder.append(System.lineSeparator()).append(content);
-        builder.append(System.lineSeparator()).append(response.asString());
+        if (response.headers().get("content-type").stream().anyMatch(o -> o.startsWith("text"))) {
+            builder.append(System.lineSeparator()).append(response.asString());
+        }
         return builder.toString();
     }
 
