@@ -6,5 +6,5 @@ package com.hawolt.virtual.leagueclient.client;
  **/
 
 public enum Authentication {
-    ENTITLEMENT, LOGIN_QUEUE, USERINFO, SESSION, GEOPAS, SIPT;
+    ENTITLEMENT, LOGIN_QUEUE, USERINFO, SESSION, GEOPAS, SIPT, RMS;
 }
