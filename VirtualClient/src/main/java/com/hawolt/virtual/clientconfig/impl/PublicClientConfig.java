@@ -15,6 +15,7 @@ import java.io.IOException;
 public class PublicClientConfig extends ClientConfig {
     public PublicClientConfig(Gateway gateway, Platform platform) throws IOException {
         super(gateway, platform);
+        this.load();
     }
 
     @Override
@@ -26,6 +27,6 @@ public class PublicClientConfig extends ClientConfig {
 
     @Override
     protected String getType() {
-        return "public.json";
+        return "public";
     }
 }

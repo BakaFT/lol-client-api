@@ -22,7 +22,6 @@ public abstract class ClientConfig {
     public ClientConfig(Gateway gateway, Platform platform) throws IOException {
         this.platform = platform;
         this.gateway = gateway;
-        this.load();
     }
 
     public JSONObject load() throws IOException {
