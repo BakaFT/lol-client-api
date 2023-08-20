@@ -155,6 +155,10 @@ public abstract class AbstractVirtualLeagueClientInstance implements IVirtualLea
                 GeoPas geoPas = new GeoPas();
                 geoPas.authenticate(gateway, localLeagueFileVersion, leagueClientSupplier);
                 virtualLeagueClient.setAuthentication(Authentication.GEOPAS, geoPas);
+
+                RMS rms = new RMS();
+                rms.authenticate(gateway, localLeagueFileVersion, leagueClientSupplier);
+                virtualLeagueClient.setAuthentication(Authentication.RMS, rms);
             }
             virtualLeagueClient.setYamlWrapper(wrapper);
 
