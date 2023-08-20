@@ -1,7 +1,7 @@
 package com.hawolt.http.layer.impl;
 
-import com.hawolt.http.auth.Gateway;
 import com.hawolt.http.OkHttp3Client;
+import com.hawolt.http.auth.Gateway;
 import com.hawolt.http.layer.IResponse;
 import okhttp3.Call;
 import okhttp3.Request;
@@ -66,13 +66,18 @@ public class OkHttpResponse implements IResponse {
     }
 
     @Override
+    public String asString() {
+        return new String(responseBody);
+    }
+
+    @Override
     public byte[] response() {
-        return responseBody;
+        return responseBody != null ? responseBody : new byte[0];
     }
 
     @Override
     public byte[] request() {
-        return requestBody;
+        return requestBody != null ? requestBody : new byte[0];
     }
 
     @Override

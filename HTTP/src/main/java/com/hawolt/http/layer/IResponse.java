@@ -26,13 +26,15 @@ public interface IResponse {
         }
         String content = Diffuser.vaporize(new String(response.request()));
         builder.append(System.lineSeparator()).append(content);
-        builder.append(System.lineSeparator()).append(new String(response.response()));
+        builder.append(System.lineSeparator()).append(response.asString());
         return builder.toString();
     }
 
     Map<String, List<String>> requestHeaders();
 
     Map<String, List<String>> headers();
+
+    String asString();
 
     byte[] response();
 

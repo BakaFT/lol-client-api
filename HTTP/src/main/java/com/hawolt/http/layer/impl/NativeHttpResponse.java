@@ -1,7 +1,7 @@
 package com.hawolt.http.layer.impl;
 
-import com.hawolt.http.auth.Gateway;
 import com.hawolt.http.NativeHttpClient;
+import com.hawolt.http.auth.Gateway;
 import com.hawolt.http.layer.IResponse;
 
 import java.io.IOException;
@@ -53,6 +53,11 @@ public class NativeHttpResponse implements IResponse {
     @Override
     public Map<String, List<String>> headers() {
         return responseHeaders;
+    }
+
+    @Override
+    public String asString() {
+        return new String(responseBody);
     }
 
     @Override
