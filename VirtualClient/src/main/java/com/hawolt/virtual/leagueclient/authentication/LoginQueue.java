@@ -3,7 +3,7 @@ package com.hawolt.virtual.leagueclient.authentication;
 import com.hawolt.generic.Constant;
 import com.hawolt.generic.data.Platform;
 import com.hawolt.generic.token.impl.StringTokenSupplier;
-import com.hawolt.http.Gateway;
+import com.hawolt.http.auth.Gateway;
 import com.hawolt.http.OkHttp3Client;
 import com.hawolt.version.IVersionSupplier;
 import okhttp3.Call;

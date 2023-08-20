@@ -1,7 +1,7 @@
 package com.hawolt.authentication;
 
 import com.hawolt.generic.data.Platform;
-import com.hawolt.http.Gateway;
+import com.hawolt.http.auth.Gateway;
 import com.hawolt.version.IVersionSupplier;
 
 import java.io.IOException;

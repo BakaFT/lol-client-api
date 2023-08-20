@@ -2,30 +2,24 @@ package com.hawolt.authentication;
 
 import com.hawolt.generic.Constant;
 import com.hawolt.generic.data.Platform;
-import com.hawolt.http.ApacheHttp2Client;
-import com.hawolt.http.Gateway;
-import com.hawolt.http.OkHttp3Client;
+import com.hawolt.http.auth.Gateway;
+import com.hawolt.http.NativeHttpClient;
+import com.hawolt.http.layer.IResponse;
+import com.hawolt.http.layer.impl.OkHttpResponse;
 import com.hawolt.version.IVersionSupplier;
-import okhttp3.Call;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import okhttp3.Response;
-import org.apache.hc.core5.http.HttpHost;
-import org.apache.hc.core5.http.HttpResponse;
-import org.apache.hc.core5.http.Message;
-import org.apache.hc.core5.http.NameValuePair;
-import org.apache.hc.core5.http.nio.support.AsyncRequestBuilder;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URLEncoder;
+import java.net.http.HttpRequest;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 /**
  * Created: 09/01/2023 21:17
@@ -33,7 +27,6 @@ import java.util.stream.Collectors;
  **/
 
 public class LocalCookieSupplier implements ICookieSupplier {
-
     public static String build(List<String> list) {
         if (list == null || list.isEmpty()) return null;
         StringBuilder builder = new StringBuilder();
@@ -42,6 +35,12 @@ public class LocalCookieSupplier implements ICookieSupplier {
             builder.append(data[0]).append("; ");
         }
         return builder.toString().trim();
+    }
+
+    private boolean rateLimitProtection;
+
+    public void setRateLimitProtection(boolean rateLimitProtection) {
+        this.rateLimitProtection = rateLimitProtection;
     }
 
     @Override
@@ -93,14 +92,10 @@ public class LocalCookieSupplier implements ICookieSupplier {
                 .post(post);
         if (__cf_bm != null) builder.addHeader("Cookie", __cf_bm);
         Request request = builder.build();
-        Call call = OkHttp3Client.perform(request, gateway);
-        try (Response response = call.execute()) {
-            if (response.code() == 429) throw new IOException("RATE_LIMITED");
-            if (__cf_bm == null) return build(response.headers("set-cookie"));
-            if (response.code() == 200) {
-                return build(response.headers("set-cookie"));
-            }
-        }
+        IResponse response = OkHttpResponse.from(request);
+        if (response.code() == 429) throw new IOException("RATE_LIMITED");
+        if (__cf_bm == null) return build(response.headers().get("set-cookie"));
+        if (response.code() == 200) return build(response.headers().get("set-cookie"));
         throw new IOException("UNABLE_TO_CREATE_SESSION");
     }
 
@@ -138,26 +133,27 @@ public class LocalCookieSupplier implements ICookieSupplier {
     @Override
     public CompletableFuture<String> getWebCookie(IVersionSupplier versionSupplier, WebOrigin origin, Platform platform) {
         CompletableFuture<String> future = new CompletableFuture<>();
-        WebSessionQueue.add(() -> {
+        Runnable runnable = () -> {
+            String base = "https://auth.riotgames.com/authorize";
+            String scopes = "account lol_region openid offline_access lol ban profile email phone birthdate summoner";
+            String query = String.format(
+                    "response_type=code&client_id=lol&redirect_uri=http://localhost/redirect&scope=%s",
+                    URLEncoder.encode(scopes, StandardCharsets.UTF_8)
+            );
+            String agent = String.format("LeagueOfLegendsClient/%s (rcp-be-%s)", versionSupplier.getVersionValue(platform, "LeagueClientUxRender.exe"), origin.toString());
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(String.join("?", base, query)))
+                    .header("User-Agent", agent)
+                    .build();
             try {
-                HttpHost target = new HttpHost("https", "auth.riotgames.com", 443);
-                String agent = String.format("LeagueOfLegendsClient/%s (rcp-be-%s)", versionSupplier.getVersionValue(platform, "LeagueClientUxRender.exe"), origin.toString());
-                String scopes = "account lol_region openid offline_access lol ban profile email phone birthdate summoner";
-                String query = String.format(
-                        "response_type=code&client_id=lol&redirect_uri=http://localhost/redirect&scope=%s",
-                        URLEncoder.encode(scopes, StandardCharsets.UTF_8.name())
-                );
-                AsyncRequestBuilder builder = ApacheHttp2Client.build(target, "/authorize", query).addHeader("User-Agent", agent);
-                Message<HttpResponse, String> message = ApacheHttp2Client.request(target, builder);
-                List<String> list = Arrays.stream(message.getHead().getHeaders())
-                        .filter(header -> header.getName().equalsIgnoreCase("set-cookie"))
-                        .map(NameValuePair::getValue)
-                        .collect(Collectors.toList());
-                future.complete(build(list));
+                IResponse response = NativeHttpClient.execute(request);
+                future.complete(build(response.headers().get("set-cookie")));
             } catch (Exception e) {
                 future.completeExceptionally(e);
             }
-        });
+        };
+        if (!rateLimitProtection) runnable.run();
+        else WebSessionQueue.add(runnable);
         return future;
     }
 }

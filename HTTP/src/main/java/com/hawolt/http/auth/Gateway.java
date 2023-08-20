@@ -1,4 +1,4 @@
-package com.hawolt.http;
+package com.hawolt.http.auth;
 
 import java.net.Proxy;
 

@@ -7,7 +7,7 @@ import com.hawolt.generic.data.QueryTokenParser;
 import com.hawolt.generic.stage.IStageCallback;
 import com.hawolt.generic.stage.StageAwareObject;
 import com.hawolt.generic.token.impl.StringTokenSupplier;
-import com.hawolt.http.Gateway;
+import com.hawolt.http.auth.Gateway;
 import com.hawolt.logger.Logger;
 import com.hawolt.version.local.LocalGameFileVersion;
 import com.hawolt.version.local.LocalLeagueFileVersion;

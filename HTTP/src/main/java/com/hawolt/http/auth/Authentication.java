@@ -1,4 +1,4 @@
-package com.hawolt.http;
+package com.hawolt.http.auth;
 
 import okhttp3.*;
 
@@ -13,6 +13,14 @@ public class Authentication implements Authenticator {
     public Authentication(String username, String password) {
         this.username = username;
         this.password = password;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
     }
 
     @Override

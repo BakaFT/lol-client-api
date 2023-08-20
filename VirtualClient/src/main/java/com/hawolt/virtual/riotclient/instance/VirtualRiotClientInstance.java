@@ -1,7 +1,7 @@
 package com.hawolt.virtual.riotclient.instance;
 
 import com.hawolt.authentication.ICookieSupplier;
-import com.hawolt.http.Gateway;
+import com.hawolt.http.auth.Gateway;
 
 /**
  * Created: 26/11/2022 13:39

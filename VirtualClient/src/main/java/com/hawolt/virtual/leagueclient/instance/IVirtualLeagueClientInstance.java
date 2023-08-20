@@ -4,7 +4,7 @@ import com.hawolt.authentication.ICookieSupplier;
 import com.hawolt.authentication.WebOrigin;
 import com.hawolt.generic.data.Platform;
 import com.hawolt.generic.token.impl.StringTokenSupplier;
-import com.hawolt.http.Gateway;
+import com.hawolt.http.auth.Gateway;
 import com.hawolt.version.local.LocalGameFileVersion;
 import com.hawolt.version.local.LocalLeagueFileVersion;
 import com.hawolt.virtual.clientconfig.impl.PlayerClientConfig;

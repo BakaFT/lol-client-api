@@ -1,4 +1,4 @@
-package com.hawolt.http;
+package com.hawolt.http.integrity;
 
 import java.util.ArrayList;
 import java.util.HashSet;

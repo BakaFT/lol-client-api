@@ -1,7 +1,7 @@
 package com.hawolt.virtual.leagueclient.refresh;
 
 import com.hawolt.generic.token.impl.StringTokenSupplier;
-import com.hawolt.http.Gateway;
+import com.hawolt.http.auth.Gateway;
 import com.hawolt.version.IVersionSupplier;
 import com.hawolt.virtual.leagueclient.authentication.IAuthentication;
 import com.hawolt.virtual.riotclient.instance.IVirtualRiotClientInstance;
