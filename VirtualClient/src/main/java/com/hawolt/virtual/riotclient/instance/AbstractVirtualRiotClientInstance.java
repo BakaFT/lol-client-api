@@ -6,15 +6,14 @@ import com.hawolt.authentication.LocalCookieSupplier;
 import com.hawolt.generic.Constant;
 import com.hawolt.generic.data.QueryTokenParser;
 import com.hawolt.generic.token.impl.StringTokenSupplier;
-import com.hawolt.http.auth.Gateway;
 import com.hawolt.http.OkHttp3Client;
+import com.hawolt.http.auth.Gateway;
 import com.hawolt.http.integrity.Diffuser;
+import com.hawolt.http.layer.IResponse;
 import com.hawolt.version.local.LocalRiotFileVersion;
 import com.hawolt.virtual.riotclient.client.VirtualRiotClient;
-import okhttp3.Call;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import okhttp3.Response;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -71,15 +70,14 @@ public abstract class AbstractVirtualRiotClientInstance implements IVirtualRiotC
                 .addHeader("Pragma", "no-cache")
                 .put(put)
                 .build();
-        Call call = OkHttp3Client.perform(request, gateway);
-        try (Response response = call.execute()) {
-            JSONObject tmp = new JSONObject(response.body().string());
-            if (tmp.has("type") && tmp.getString("type").equalsIgnoreCase("multifactor")) {
-                return submit2FA(LocalCookieSupplier.build(response.headers().toMultimap().get("set-cookie")), multifactor.get(username, password));
-            } else {
-                return tmp.toString();
-            }
+        IResponse response = OkHttp3Client.execute(request, gateway);
+        JSONObject tmp = new JSONObject(response.asString());
+        if (tmp.has("type") && tmp.getString("type").equalsIgnoreCase("multifactor")) {
+            return submit2FA(LocalCookieSupplier.build(response.headers().get("set-cookie")), multifactor.get(username, password));
+        } else {
+            return tmp.toString();
         }
+
     }
 
     @Override
@@ -105,10 +103,7 @@ public abstract class AbstractVirtualRiotClientInstance implements IVirtualRiotC
                 .addHeader("Pragma", "no-cache")
                 .put(body)
                 .build();
-        Call call = OkHttp3Client.perform(request, gateway);
-        try (Response response = call.execute()) {
-            return response.body().string();
-        }
+        return OkHttp3Client.execute(request, gateway).asString();
     }
 
     @Override
