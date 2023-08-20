@@ -2,10 +2,13 @@ package com.hawolt.virtual.leagueclient.authentication;
 
 import com.hawolt.generic.data.Platform;
 import com.hawolt.generic.token.impl.StringTokenSupplier;
-import com.hawolt.http.auth.Gateway;
 import com.hawolt.http.OkHttp3Client;
+import com.hawolt.http.auth.Gateway;
+import com.hawolt.http.layer.IResponse;
 import com.hawolt.version.IVersionSupplier;
-import okhttp3.*;
+import okhttp3.FormBody;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -35,15 +38,13 @@ public class OAuthToken extends StringTokenSupplier implements IAuthentication {
                 .addHeader("Accept", "application/json")
                 .post(body)
                 .build();
-        Call call = OkHttp3Client.perform(request, gateway);
-        try (Response response = call.execute()) {
-            JSONObject object = new JSONObject(response.body().string());
-            String token = object.getString("access_token");
-            for (String key : object.keySet()) {
-                add(key, String.valueOf(object.get(key)));
-            }
-            return token;
+        IResponse response = OkHttp3Client.execute(request, gateway);
+        JSONObject object = new JSONObject(response.asString());
+        String token = object.getString("access_token");
+        for (String key : object.keySet()) {
+            add(key, String.valueOf(object.get(key)));
         }
+        return token;
     }
 
     @Override

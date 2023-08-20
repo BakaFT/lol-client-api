@@ -1,12 +1,11 @@
 package com.hawolt.virtual.leagueclient.authentication;
 
 import com.hawolt.generic.token.impl.StringTokenSupplier;
-import com.hawolt.http.auth.Gateway;
 import com.hawolt.http.OkHttp3Client;
+import com.hawolt.http.auth.Gateway;
+import com.hawolt.http.layer.IResponse;
 import com.hawolt.version.IVersionSupplier;
-import okhttp3.Call;
 import okhttp3.Request;
-import okhttp3.Response;
 
 import java.io.IOException;
 
@@ -24,12 +23,10 @@ public class GeoPas extends StringTokenSupplier implements IAuthentication {
                 .addHeader("Authorization", String.format("Bearer %s", tokenSupplier.get("lol.access_token", true)))
                 .get()
                 .build();
-        Call call = OkHttp3Client.perform(request, gateway);
-        try (Response response = call.execute()) {
-            String token = response.body().string();
-            add("xmpp_token", token);
-            return token;
-        }
+        IResponse response = OkHttp3Client.execute(request, gateway);
+        String token = response.asString();
+        add("xmpp_token", token);
+        return token;
     }
 
     @Override

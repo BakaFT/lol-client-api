@@ -3,13 +3,12 @@ package com.hawolt.virtual.leagueclient.authentication;
 import com.hawolt.generic.Constant;
 import com.hawolt.generic.data.Platform;
 import com.hawolt.generic.token.impl.StringTokenSupplier;
-import com.hawolt.http.auth.Gateway;
 import com.hawolt.http.OkHttp3Client;
+import com.hawolt.http.auth.Gateway;
+import com.hawolt.http.layer.IResponse;
 import com.hawolt.version.IVersionSupplier;
-import okhttp3.Call;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import okhttp3.Response;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -46,14 +45,12 @@ public class LoginQueue extends StringTokenSupplier implements IAuthentication {
                 )
                 .post(post)
                 .build();
-        Call call = OkHttp3Client.perform(request, gateway);
-        try (Response response = call.execute()) {
-            JSONObject object = new JSONObject(response.body().string());
-            if (!object.has("token")) throw new IOException("NO_DATA_PRESENT");
-            String token = object.getString("token");
-            add("login_token", token);
-            return token;
-        }
+        IResponse response = OkHttp3Client.execute(request, gateway);
+        JSONObject object = new JSONObject(response.asString());
+        if (!object.has("token")) throw new IOException("NO_DATA_PRESENT");
+        String token = object.getString("token");
+        add("login_token", token);
+        return token;
     }
 
     @Override

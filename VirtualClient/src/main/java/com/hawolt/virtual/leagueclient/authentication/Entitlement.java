@@ -4,6 +4,7 @@ import com.hawolt.generic.Constant;
 import com.hawolt.generic.token.impl.StringTokenSupplier;
 import com.hawolt.http.auth.Gateway;
 import com.hawolt.http.OkHttp3Client;
+import com.hawolt.http.layer.IResponse;
 import com.hawolt.version.IVersionSupplier;
 import okhttp3.Call;
 import okhttp3.Request;
@@ -30,15 +31,13 @@ public class Entitlement extends StringTokenSupplier implements IAuthentication 
                 .addHeader("Accept", "application/json")
                 .post(post)
                 .build();
-        Call call = OkHttp3Client.perform(request, gateway);
-        try (Response response = call.execute()) {
-            JSONObject object = new JSONObject(response.body().string());
-            if (!object.has("entitlements_token")) throw new IOException("NO_DATA_PRESENT");
-            String token = object.getString("entitlements_token");
-            String key = String.join(".", tokenSupplier.getSupplierName(), "entitlements_token");
-            add(key, token);
-            return token;
-        }
+        IResponse response = OkHttp3Client.execute(request, gateway);
+        JSONObject object = new JSONObject(response.asString());
+        if (!object.has("entitlements_token")) throw new IOException("NO_DATA_PRESENT");
+        String token = object.getString("entitlements_token");
+        String key = String.join(".", tokenSupplier.getSupplierName(), "entitlements_token");
+        add(key, token);
+        return token;
     }
 
     @Override

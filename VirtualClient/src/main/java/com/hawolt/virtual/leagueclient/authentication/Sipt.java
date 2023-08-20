@@ -4,6 +4,7 @@ import com.hawolt.generic.data.Platform;
 import com.hawolt.generic.token.impl.StringTokenSupplier;
 import com.hawolt.http.auth.Gateway;
 import com.hawolt.http.OkHttp3Client;
+import com.hawolt.http.layer.IResponse;
 import com.hawolt.version.IVersionSupplier;
 import okhttp3.Call;
 import okhttp3.Request;
@@ -38,13 +39,12 @@ public class Sipt extends StringTokenSupplier implements IAuthentication {
                 .addHeader("Accept", "application/json")
                 .get()
                 .build();
-        Call call = OkHttp3Client.perform(request, gateway);
-        try (Response response = call.execute()) {
-            String plain = response.body().string();
-            String token = plain.substring(1, plain.length() - 1);
-            add("sipt_token", token);
-            return token;
-        }
+        IResponse response = OkHttp3Client.execute(request, gateway);
+        String plain = response.asString();
+        String token = plain.substring(1, plain.length() - 1);
+        add("sipt_token", token);
+        return token;
+
     }
 
     @Override
