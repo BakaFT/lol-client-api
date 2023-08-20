@@ -2,9 +2,9 @@ package com.hawolt.virtual.clientconfig;
 
 import com.hawolt.generic.data.Platform;
 import com.hawolt.http.OkHttp3Client;
-import okhttp3.Call;
+import com.hawolt.http.auth.Gateway;
+import com.hawolt.http.layer.IResponse;
 import okhttp3.Request;
-import okhttp3.Response;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -23,13 +23,11 @@ public abstract class ClientConfig {
         this.platform = platform;
     }
 
-    public JSONObject load() throws IOException {
+    public JSONObject load(Gateway gateway) throws IOException {
         if (cache != null) return cache;
-        Call call = OkHttp3Client.perform(request());
-        try (Response response = call.execute()) {
-            this.cache = new JSONObject(response.body().string());
-            return cache;
-        }
+        IResponse response = OkHttp3Client.execute(request(), gateway);
+        this.cache = new JSONObject(response.asString());
+        return cache;
     }
 
     protected abstract Request request();
