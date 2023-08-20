@@ -17,7 +17,7 @@ import java.io.IOException;
 public abstract class ClientConfig {
     protected final Platform platform;
     private final Gateway gateway;
-    private JSONObject cache;
+    protected JSONObject cache;
 
     public ClientConfig(Gateway gateway, Platform platform) throws IOException {
         this.platform = platform;

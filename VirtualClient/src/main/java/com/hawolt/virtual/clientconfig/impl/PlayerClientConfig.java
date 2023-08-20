@@ -4,6 +4,8 @@ import com.hawolt.generic.data.Platform;
 import com.hawolt.generic.token.impl.StringTokenSupplier;
 import com.hawolt.http.auth.Gateway;
 import com.hawolt.virtual.clientconfig.ClientConfig;
+import com.hawolt.virtual.clientconfig.impl.rms.RMSAffinity;
+import com.hawolt.virtual.clientconfig.impl.rms.RiotMessageServiceConfig;
 import okhttp3.Request;
 
 import java.io.IOException;
@@ -14,11 +16,17 @@ import java.io.IOException;
  **/
 
 public class PlayerClientConfig extends ClientConfig {
+    private final RiotMessageServiceConfig riotMessageServiceConfig;
     private final StringTokenSupplier supplier;
 
     public PlayerClientConfig(Gateway gateway, Platform platform, StringTokenSupplier supplier) throws IOException {
         super(gateway, platform);
         this.supplier = supplier;
+        this.riotMessageServiceConfig = new RiotMessageServiceConfig(cache);
+    }
+
+    public RiotMessageServiceConfig getRiotMessageServiceConfig() {
+        return riotMessageServiceConfig;
     }
 
     @Override
