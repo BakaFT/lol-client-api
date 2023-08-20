@@ -1,6 +1,7 @@
 package com.hawolt.virtual.clientconfig.impl;
 
 import com.hawolt.generic.data.Platform;
+import com.hawolt.http.auth.Gateway;
 import com.hawolt.virtual.clientconfig.ClientConfig;
 import okhttp3.Request;
 
@@ -10,8 +11,8 @@ import okhttp3.Request;
  **/
 
 public class PublicClientConfig extends ClientConfig {
-    public PublicClientConfig(Platform platform) {
-        super(platform);
+    public PublicClientConfig(Gateway gateway, Platform platform) {
+        super(gateway, platform);
     }
 
     @Override

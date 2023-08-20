@@ -2,6 +2,7 @@ package com.hawolt.virtual.clientconfig.impl;
 
 import com.hawolt.generic.data.Platform;
 import com.hawolt.generic.token.impl.StringTokenSupplier;
+import com.hawolt.http.auth.Gateway;
 import com.hawolt.virtual.clientconfig.ClientConfig;
 import okhttp3.Request;
 
@@ -13,8 +14,8 @@ import okhttp3.Request;
 public class PlayerClientConfig extends ClientConfig {
     private final StringTokenSupplier supplier;
 
-    public PlayerClientConfig(Platform platform, StringTokenSupplier supplier) {
-        super(platform);
+    public PlayerClientConfig(Gateway gateway, Platform platform, StringTokenSupplier supplier) {
+        super(gateway, platform);
         this.supplier = supplier;
     }
 

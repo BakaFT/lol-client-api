@@ -148,8 +148,8 @@ public abstract class AbstractVirtualLeagueClientInstance implements IVirtualLea
                         virtualRiotClient.getRiotClientSupplier(),
                         entitlement
                 );
-                playerClientConfig = new PlayerClientConfig(platform, config);
-                publicClientConfig = new PublicClientConfig(platform);
+                playerClientConfig = new PlayerClientConfig(gateway, platform, config);
+                publicClientConfig = new PublicClientConfig(gateway, platform);
 
                 virtualLeagueClient.setAuthentication(Authentication.ENTITLEMENT, entitlement);
                 GeoPas geoPas = new GeoPas();

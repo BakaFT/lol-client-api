@@ -16,14 +16,15 @@ import java.io.IOException;
 
 public abstract class ClientConfig {
     protected final Platform platform;
-
+    private final Gateway gateway;
     private JSONObject cache;
 
-    public ClientConfig(Platform platform) {
+    public ClientConfig(Gateway gateway, Platform platform) {
         this.platform = platform;
+        this.gateway = gateway;
     }
 
-    public JSONObject load(Gateway gateway) throws IOException {
+    public JSONObject load() throws IOException {
         if (cache != null) return cache;
         IResponse response = OkHttp3Client.execute(request(), gateway);
         this.cache = new JSONObject(response.asString());
