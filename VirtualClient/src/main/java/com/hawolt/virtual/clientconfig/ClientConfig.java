@@ -19,9 +19,10 @@ public abstract class ClientConfig {
     private final Gateway gateway;
     private JSONObject cache;
 
-    public ClientConfig(Gateway gateway, Platform platform) {
+    public ClientConfig(Gateway gateway, Platform platform) throws IOException {
         this.platform = platform;
         this.gateway = gateway;
+        this.load();
     }
 
     public JSONObject load() throws IOException {

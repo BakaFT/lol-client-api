@@ -6,6 +6,8 @@ import com.hawolt.http.auth.Gateway;
 import com.hawolt.virtual.clientconfig.ClientConfig;
 import okhttp3.Request;
 
+import java.io.IOException;
+
 /**
  * Created: 18/08/2023 17:11
  * Author: Twitter @hawolt
@@ -14,7 +16,7 @@ import okhttp3.Request;
 public class PlayerClientConfig extends ClientConfig {
     private final StringTokenSupplier supplier;
 
-    public PlayerClientConfig(Gateway gateway, Platform platform, StringTokenSupplier supplier) {
+    public PlayerClientConfig(Gateway gateway, Platform platform, StringTokenSupplier supplier) throws IOException {
         super(gateway, platform);
         this.supplier = supplier;
     }
