@@ -2,10 +2,10 @@ package com.hawolt.authentication;
 
 import com.hawolt.generic.Constant;
 import com.hawolt.generic.data.Platform;
-import com.hawolt.http.auth.Gateway;
 import com.hawolt.http.NativeHttpClient;
+import com.hawolt.http.OkHttp3Client;
+import com.hawolt.http.auth.Gateway;
 import com.hawolt.http.layer.IResponse;
-import com.hawolt.http.layer.impl.OkHttpResponse;
 import com.hawolt.version.IVersionSupplier;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -92,7 +92,7 @@ public class LocalCookieSupplier implements ICookieSupplier {
                 .post(post);
         if (__cf_bm != null) builder.addHeader("Cookie", __cf_bm);
         Request request = builder.build();
-        IResponse response = OkHttpResponse.from(request);
+        IResponse response = OkHttp3Client.execute(request);
         if (response.code() == 429) throw new IOException("RATE_LIMITED");
         if (__cf_bm == null) return build(response.headers().get("set-cookie"));
         if (response.code() == 200) return build(response.headers().get("set-cookie"));
