@@ -17,15 +17,22 @@ public interface IResponse {
                 .append(response.method())
                 .append(" ")
                 .append(response.url());
-        Map<String, List<String>> headers = response.headers();
-        for (String key : headers.keySet()) {
-            List<String> collection = headers.get(key);
+        Map<String, List<String>> requestHeaders = response.requestHeaders();
+        for (String key : requestHeaders.keySet()) {
+            List<String> collection = requestHeaders.get(key);
             for (String header : collection) {
                 builder.append(System.lineSeparator()).append(key).append(": ").append(header);
             }
         }
         String content = Diffuser.vaporize(new String(response.request()));
         builder.append(System.lineSeparator()).append(content);
+        Map<String, List<String>> responseHeaders = response.headers();
+        for (String key : responseHeaders.keySet()) {
+            List<String> collection = responseHeaders.get(key);
+            for (String header : collection) {
+                builder.append(System.lineSeparator()).append(key).append(": ").append(header);
+            }
+        }
         if (response.headers().get("content-type").stream().anyMatch(o -> o.startsWith("text"))) {
             builder.append(System.lineSeparator()).append(response.asString());
         }

@@ -40,7 +40,8 @@ public class OkHttpResponse implements IResponse {
         this.method = request.method();
         RequestBody body = request.body();
         if (body != null) {
-            Pipe pipe = new Pipe(body.contentLength());
+            long size = body.contentLength() == 0 ? 1 : body.contentLength();
+            Pipe pipe = new Pipe(size);
             BufferedSink sink = Okio.buffer(pipe.sink());
             body.writeTo(sink);
             this.requestBody = sink.getBuffer().readByteArray();
