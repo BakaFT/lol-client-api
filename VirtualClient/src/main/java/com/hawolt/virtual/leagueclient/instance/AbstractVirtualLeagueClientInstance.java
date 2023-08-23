@@ -119,29 +119,19 @@ public abstract class AbstractVirtualLeagueClientInstance implements IVirtualLea
         };
         StageAwareObject<VirtualLeagueClient> awareness = new StageAwareObject<>(callback, () -> {
             if (selfRefresh) {
-                IAuthentication entitlement = virtualLeagueClient.get(Authentication.ENTITLEMENT);
-                LocalRiotFileVersion localRiotFileVersion = virtualRiotClient.getInstance().getLocalRiotFileVersion();
-                StringTokenSupplier supplier = virtualLeagueClient.getWebOriginOAuthTokenMap().get(WebOrigin.ENTITLEMENTS);
                 RefreshGroup group = new RefreshGroup();
                 for (WebOrigin webOrigin : WebOrigin.values()) {
-                    if (webOrigin == WebOrigin.UNKNOWN) continue;
+                    if (webOrigin != WebOrigin.LOL_LOGIN) continue;
                     OAuthToken token = virtualLeagueClient.getWebOriginOAuthTokenMap().get(webOrigin);
                     StringTokenSupplier tokenSupplier = virtualLeagueClient.getWebOriginStringTokenSupplierMap().get(webOrigin);
                     Refreshable refreshable = new Refreshable(virtualLeagueClient, token, localLeagueFileVersion, tokenSupplier);
                     group.add(refreshable);
                 }
-                Refreshable refreshable = new Refreshable(virtualLeagueClient, entitlement, localRiotFileVersion, supplier);
-                try {
-                    refreshable.refresh(virtualRiotClient.getInstance());
-                } catch (IOException e) {
-                    Logger.error(e);
-                }
-                group.add(refreshable);
                 virtualLeagueClient.refresh(group, 55, 55);
             }
             virtualRiotClient.getMultifactorSupplier().clear(virtualRiotClient.getUsername(), virtualRiotClient.getPassword());
             return virtualLeagueClient;
-        }, 2);
+        }, 1);
         LocalRiotFileVersion localRiotFileVersion = virtualRiotClient.getInstance().getLocalRiotFileVersion();
         Gateway gateway = virtualRiotClient.getInstance().getGateway();
         try {
