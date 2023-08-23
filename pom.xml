@@ -17,7 +17,7 @@
         <module>Generic</module>
         <module>YAML</module>
         <module>Manifest</module>
-        <module>VirtualClient</module>
+        <module>LegacyVirtualClientV1</module>
         <module>WAD</module>
     </modules>
 
