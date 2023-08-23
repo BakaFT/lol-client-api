@@ -53,4 +53,7 @@ public class QueryTokenParser {
         return compute(name, getURI(plaintext).split("#"));
     }
 
+    public static StringTokenSupplier getTokens(String name, String plaintext, String splitter) throws IOException {
+        return compute(name, getURI(plaintext).split(splitter, 2));
+    }
 }
