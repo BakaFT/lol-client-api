@@ -73,8 +73,7 @@ public class LocalCookieSupplier implements ICookieSupplier {
     }
 
     private static String createSessionCookie(IVersionSupplier versionSupplier, String __cf_bm, CookieType type, Platform platform, Gateway gateway) throws IOException {
-        String nonce = generateNonce();
-        String body = payload(type, nonce);
+        String body = payload(type);
         RequestBody post = RequestBody.create(body, Constant.APPLICATION_JSON);
         String minor = versionSupplier.getVersionValue("RiotGamesApi.dll");
         Request.Builder builder = new Request.Builder()
@@ -99,10 +98,10 @@ public class LocalCookieSupplier implements ICookieSupplier {
         throw new IOException("UNABLE_TO_CREATE_SESSION");
     }
 
-    private static String payload(CookieType type, String nonce) {
+    public static String payload(CookieType type) {
         JSONObject object = new JSONObject();
         object.put("claims", "");
-        object.put("nonce", nonce);
+        object.put("nonce", generateNonce());
         object.put("acr_values", "");
         object.put("code_challenge", "");
         object.put("client_id", type == CookieType.RIOT_CLIENT ?
@@ -112,14 +111,11 @@ public class LocalCookieSupplier implements ICookieSupplier {
         object.put("code_challenge_method", "");
         object.put("response_type", "token id_token");
         object.put("redirect_uri", "http://localhost/redirect");
-        object.put("scope", type == CookieType.RIOT_CLIENT ?
-                "openid link ban lol_region lol summoner offline_access" :
-                "lol_region account openid ban lol summoner offline_access"
-        );
+        object.put("scope", "openid link ban lol_region lol account");
         return object.toString();
     }
 
-    private static String generateNonce() {
+    public static String generateNonce() {
         return new String(Base64.getEncoder().encode(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8))).substring(0, 22);
     }
 
