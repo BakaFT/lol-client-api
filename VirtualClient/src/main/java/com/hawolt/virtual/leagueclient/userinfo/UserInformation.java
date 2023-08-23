@@ -3,6 +3,8 @@ package com.hawolt.virtual.leagueclient.userinfo;
 import com.hawolt.virtual.leagueclient.userinfo.child.*;
 import org.json.JSONObject;
 
+import java.util.Base64;
+
 /**
  * Created: 10/01/2023 22:02
  * Author: Twitter @hawolt
@@ -10,7 +12,7 @@ import org.json.JSONObject;
 
 public class UserInformation {
     private final String country, sub, originalPlatformId, preferredUsername, jti, username;
-    private final Object playerPLocale, playerLocale;
+    private final Object playerLocale;
     private final long originalAccountId, pvpnetAccountId;
     private final boolean emailVerified, phoneVerified;
     private final UserInformationLeagueRegion userInformationLeagueRegion;
@@ -20,7 +22,7 @@ public class UserInformation {
     private final UserInformationBan userInformationBan;
     private UserInformationLeagueAccount userInformationLeagueAccount;
     private UserInformationRegion userInformationRegion;
-    private Object photo, countryAt, pPID;
+    private Object photo, countryAt, pPID, playerPLocale;
 
     public UserInformation(JSONObject o) {
         this.country = o.getString("country");
@@ -29,7 +31,7 @@ public class UserInformation {
             this.userInformationLeagueAccount = new UserInformationLeagueAccount(o.getJSONObject("lol_account"));
         }
         this.emailVerified = o.getBoolean("email_verified");
-        this.playerPLocale = o.get("player_plocale");
+        if (o.has("player_plocale")) this.playerPLocale = o.get("player_plocale");
         if (o.has("country_at")) this.countryAt = o.get("country_at");
         this.userInformationPassword = new UserInformationPassword(o.getJSONObject("pw"));
         this.userInformationLeague = new UserInformationLeague(o.getJSONObject("lol"));
