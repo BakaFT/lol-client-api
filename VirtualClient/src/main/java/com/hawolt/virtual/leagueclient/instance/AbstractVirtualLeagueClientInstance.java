@@ -10,7 +10,6 @@ import com.hawolt.generic.stage.StageAwareObject;
 import com.hawolt.generic.token.impl.StringTokenSupplier;
 import com.hawolt.http.OkHttp3Client;
 import com.hawolt.http.auth.Gateway;
-import com.hawolt.logger.Logger;
 import com.hawolt.version.local.LocalGameFileVersion;
 import com.hawolt.version.local.LocalLeagueFileVersion;
 import com.hawolt.version.local.LocalRiotFileVersion;
@@ -129,7 +128,9 @@ public abstract class AbstractVirtualLeagueClientInstance implements IVirtualLea
                 }
                 virtualLeagueClient.refresh(group, 55, 55);
             }
-            virtualRiotClient.getMultifactorSupplier().clear(virtualRiotClient.getUsername(), virtualRiotClient.getPassword());
+            if (virtualRiotClient.getMultifactorSupplier() != null) {
+                virtualRiotClient.getMultifactorSupplier().clear(virtualRiotClient.getUsername(), virtualRiotClient.getPassword());
+            }
             return virtualLeagueClient;
         }, 1);
         LocalRiotFileVersion localRiotFileVersion = virtualRiotClient.getInstance().getLocalRiotFileVersion();
