@@ -18,6 +18,7 @@ public class StringTokenSupplier implements ITokenSupplier<String> {
     public static boolean debug = true;
     private final Map<String, String> map = new HashMap<>();
 
+    private String name;
 
     @Override
     public String get(String name) {
@@ -29,6 +30,13 @@ public class StringTokenSupplier implements ITokenSupplier<String> {
         String value = map.getOrDefault(key, "null");
         if (debug) Logger.debug("[{}] fetching {}: {}", getSupplierName(), name, value);
         return value;
+    }
+
+    public String getSimple(String name) {
+        for (String key : map.keySet()) {
+            if (key.endsWith(name)) return map.get(key);
+        }
+        return "null";
     }
 
     @Override
@@ -56,7 +64,6 @@ public class StringTokenSupplier implements ITokenSupplier<String> {
     public String getSupplierName() {
         return getClass().getSimpleName().toLowerCase();
     }
-
 
     public static StringTokenSupplier merge(String name, StringTokenSupplier... suppliers) {
         String bundled = Arrays.stream(suppliers).map(StringTokenSupplier::getSupplierName).collect(Collectors.joining(","));
