@@ -19,7 +19,6 @@
         <module>Manifest</module>
         <module>WAD</module>
         <module>VirtualClient</module>
-        <module>LegacyVirtualClientV1</module>
     </modules>
 
     <properties>
