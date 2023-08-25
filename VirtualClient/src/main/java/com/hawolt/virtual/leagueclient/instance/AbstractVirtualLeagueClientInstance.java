@@ -1,113 +1,90 @@
 package com.hawolt.virtual.leagueclient.instance;
 
-import com.hawolt.authentication.LocalCookieSupplier;
-import com.hawolt.authentication.WebOrigin;
-import com.hawolt.generic.Constant;
+import com.hawolt.authentication.*;
 import com.hawolt.generic.data.Platform;
 import com.hawolt.generic.data.QueryTokenParser;
 import com.hawolt.generic.stage.IStageCallback;
 import com.hawolt.generic.stage.StageAwareObject;
 import com.hawolt.generic.token.impl.StringTokenSupplier;
-import com.hawolt.http.OkHttp3Client;
 import com.hawolt.http.auth.Gateway;
+import com.hawolt.http.layer.IResponse;
 import com.hawolt.version.local.LocalGameFileVersion;
 import com.hawolt.version.local.LocalLeagueFileVersion;
-import com.hawolt.version.local.LocalRiotFileVersion;
 import com.hawolt.virtual.client.OAuthCode;
 import com.hawolt.virtual.clientconfig.impl.PlayerClientConfig;
 import com.hawolt.virtual.clientconfig.impl.PublicClientConfig;
-import com.hawolt.virtual.leagueclient.authentication.*;
+import com.hawolt.virtual.leagueclient.authentication.impl.*;
 import com.hawolt.virtual.leagueclient.client.Authentication;
 import com.hawolt.virtual.leagueclient.client.VirtualLeagueClient;
 import com.hawolt.virtual.leagueclient.exception.LeagueException;
-import com.hawolt.virtual.leagueclient.refresh.RefreshGroup;
-import com.hawolt.virtual.leagueclient.refresh.Refreshable;
 import com.hawolt.virtual.leagueclient.userinfo.UserInformation;
+import com.hawolt.virtual.refresh.RefreshManager;
+import com.hawolt.virtual.refresh.RefreshTask;
+import com.hawolt.virtual.refresh.ScheduledRefresh;
 import com.hawolt.virtual.riotclient.client.IVirtualRiotClient;
-import com.hawolt.yaml.ConfigValue;
+import com.hawolt.virtual.riotclient.instance.IVirtualRiotClientInstance;
 import com.hawolt.yaml.IYamlSupplier;
-import com.hawolt.yaml.YamlWrapper;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import org.json.JSONObject;
+import com.hawolt.yaml.impl.YamlSupplier;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created: 13/01/2023 11:46
  * Author: Twitter @hawolt
  **/
 
-public abstract class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClientInstance {
-    private final StringTokenSupplier leagueClientSupplier;
-    private final IVirtualRiotClient virtualRiotClient;
-    private final UserInformation userInformation;
-    protected final IYamlSupplier yamlSupplier;
-    protected final boolean selfUpdate;
+public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClientInstance {
 
+    private final IVirtualRiotClientInstance virtualLeagueClientInstance;
+    private final IVirtualRiotClient virtualRiotClient;
     private LocalLeagueFileVersion localLeagueFileVersion;
     private LocalGameFileVersion localGameFileVersion;
     private PlayerClientConfig playerClientConfig;
     private PublicClientConfig publicClientConfig;
-    private String platformId;
+    private ScheduledRefresh<?> scheduledRefresh;
+    private ClientTokenStorage tokenStorage;
+    private IYamlSupplier yamlSupplier;
     private Platform platform;
-    private OAuthToken token;
+    private String platformId;
 
-    public AbstractVirtualLeagueClientInstance(IVirtualRiotClient virtualRiotClient, UserInformation userInformation, IYamlSupplier yamlSupplier, StringTokenSupplier leagueClientSupplier, boolean selfUpdate) {
-        this(virtualRiotClient, userInformation, yamlSupplier, leagueClientSupplier, null, selfUpdate);
-    }
-
-    public AbstractVirtualLeagueClientInstance(IVirtualRiotClient virtualRiotClient, UserInformation userInformation, IYamlSupplier yamlSupplier, StringTokenSupplier leagueClientSupplier, OAuthToken token, boolean selfUpdate) {
-        this.leagueClientSupplier = leagueClientSupplier;
+    public AbstractVirtualLeagueClientInstance(IVirtualRiotClient virtualRiotClient) {
+        this.virtualLeagueClientInstance = virtualRiotClient.getInstance();
         this.virtualRiotClient = virtualRiotClient;
-        this.userInformation = userInformation;
-        this.yamlSupplier = yamlSupplier;
-        this.selfUpdate = selfUpdate;
-        this.token = token;
     }
 
-    @Override
-    public CompletableFuture<VirtualLeagueClient> chat() throws LeagueException {
-        return login(true, true, false, false);
-    }
-
-    @Override
-    public CompletableFuture<VirtualLeagueClient> login() throws LeagueException {
-        return login(false, true, true, false);
-    }
-
-    @Override
-    public CompletableFuture<VirtualLeagueClient> login(boolean ignoreSummoner, boolean selfRefresh) throws LeagueException {
-        return login(ignoreSummoner, selfRefresh, true, false);
-    }
-
-    @Override
-    public CompletableFuture<VirtualLeagueClient> login(boolean ignoreSummoner, boolean selfRefresh, boolean complete, boolean minimal) throws LeagueException {
+    private void checkSummonerState(UserInformation userInformation, boolean ignoreSummoner) throws LeagueException {
         if (!ignoreSummoner && !userInformation.isLeagueAccountAssociated()) {
             throw new LeagueException(LeagueException.ErrorType.NO_SUMMONER_NAME);
         }
+    }
+
+    private void configure(UserInformation userInformation) {
         this.platformId = userInformation.getUserInformationLeague().getCPID();
         this.platform = Platform.valueOf(platformId);
         this.localGameFileVersion = new LocalGameFileVersion(platform, Collections.singletonList("League of Legends.exe"));
+        this.yamlSupplier = new YamlSupplier(platform);
         this.localLeagueFileVersion = new LocalLeagueFileVersion(
                 Arrays.asList(
                         "League of Legends.exe",
                         "LeagueClientUxRender.exe",
-                        "RiotGamesApi.dll"),
+                        "RiotGamesApi.dll"
+                ),
                 platform
         );
-        if (selfUpdate) localLeagueFileVersion.schedule(15, 15, TimeUnit.MINUTES);
-        CompletableFuture<VirtualLeagueClient> future = new CompletableFuture<>();
-        VirtualLeagueClient virtualLeagueClient = new VirtualLeagueClient(this);
-        IStageCallback<VirtualLeagueClient> callback = new IStageCallback<VirtualLeagueClient>() {
+    }
+
+    private IStageCallback<VirtualLeagueClient> getClientCompletionCallback(CompletableFuture<VirtualLeagueClient> future) {
+        return new IStageCallback<>() {
             @Override
             public void onStageReached(VirtualLeagueClient client) {
+                if (virtualRiotClient.getMultifactorSupplier() != null) {
+                    virtualRiotClient.getMultifactorSupplier().clear(virtualRiotClient.getUsername(), virtualRiotClient.getPassword());
+                }
                 future.complete(client);
             }
 
@@ -116,139 +93,6 @@ public abstract class AbstractVirtualLeagueClientInstance implements IVirtualLea
                 future.completeExceptionally(throwable);
             }
         };
-        StageAwareObject<VirtualLeagueClient> awareness = new StageAwareObject<>(callback, () -> {
-            if (selfRefresh) {
-                RefreshGroup group = new RefreshGroup();
-                for (WebOrigin webOrigin : WebOrigin.values()) {
-                    if (webOrigin != WebOrigin.LOL_LOGIN) continue;
-                    OAuthToken token = virtualLeagueClient.getWebOriginOAuthTokenMap().get(webOrigin);
-                    StringTokenSupplier tokenSupplier = virtualLeagueClient.getWebOriginStringTokenSupplierMap().get(webOrigin);
-                    Refreshable refreshable = new Refreshable(virtualLeagueClient, token, localLeagueFileVersion, tokenSupplier);
-                    group.add(refreshable);
-                }
-                virtualLeagueClient.refresh(group, 55, 55);
-            }
-            if (virtualRiotClient.getMultifactorSupplier() != null) {
-                virtualRiotClient.getMultifactorSupplier().clear(virtualRiotClient.getUsername(), virtualRiotClient.getPassword());
-            }
-            return virtualLeagueClient;
-        }, 1);
-        LocalRiotFileVersion localRiotFileVersion = virtualRiotClient.getInstance().getLocalRiotFileVersion();
-        Gateway gateway = virtualRiotClient.getInstance().getGateway();
-        try {
-            Userinfo userinfo = new Userinfo();
-            userinfo.authenticate(gateway, localRiotFileVersion, leagueClientSupplier);
-            virtualLeagueClient.setAuthentication(Authentication.USERINFO, userinfo);
-
-            YamlWrapper wrapper = yamlSupplier.getYamlResources(platform);
-            Entitlement entitlement = new Entitlement();
-            if (!minimal) {
-                entitlement.authenticate(gateway, localRiotFileVersion, leagueClientSupplier);
-                entitlement.authenticate(gateway, localRiotFileVersion, virtualRiotClient.getRiotClientSupplier());
-
-                StringTokenSupplier config = StringTokenSupplier.merge(
-                        "clientconfig",
-                        virtualRiotClient.getRiotClientSupplier(),
-                        entitlement
-                );
-                playerClientConfig = new PlayerClientConfig(gateway, platform, config);
-                publicClientConfig = new PublicClientConfig(gateway, platform);
-
-                virtualLeagueClient.setAuthentication(Authentication.ENTITLEMENT, entitlement);
-                GeoPas geoPas = new GeoPas();
-                geoPas.authenticate(gateway, localLeagueFileVersion, leagueClientSupplier);
-                virtualLeagueClient.setAuthentication(Authentication.GEOPAS, geoPas);
-
-                RMS rms = new RMS();
-                rms.authenticate(gateway, localLeagueFileVersion, leagueClientSupplier);
-                virtualLeagueClient.setAuthentication(Authentication.RMS, rms);
-            }
-            virtualLeagueClient.setYamlWrapper(wrapper);
-
-            if (complete) {
-                LoginQueue loginQueue = new LoginQueue(wrapper.get(ConfigValue.PLATFORM), platform);
-                loginQueue.authenticate(gateway, localLeagueFileVersion, StringTokenSupplier.merge("queue", leagueClientSupplier, userinfo, entitlement));
-                virtualLeagueClient.setAuthentication(Authentication.LOGIN_QUEUE, loginQueue);
-                Session session = new Session(userInformation, platform, wrapper.get(ConfigValue.PLATFORM));
-                session.authenticate(gateway, localLeagueFileVersion, loginQueue);
-                virtualLeagueClient.setAuthentication(Authentication.SESSION, session);
-                virtualLeagueClient.refresh(virtualLeagueClient, session, localLeagueFileVersion, null, 5, 5);
-            }
-
-            if (selfRefresh) {
-                OAuthToken oauth;
-                if (token == null) {
-                    OAuthCode code = OAuthCode.generate();
-                    oauth = new OAuthToken(platform);
-                    StringTokenSupplier supplier = oauth(gateway, code);
-                    supplier.add("verifier", code.getVerifier());
-                    oauth.authenticate(gateway, localLeagueFileVersion, supplier);
-                } else {
-                    oauth = token;
-                }
-                Map<WebOrigin, StringTokenSupplier> webOriginStringTokenSupplierMap = new HashMap<>();
-                Map<WebOrigin, OAuthToken> webOriginOAuthTokenMap = new HashMap<>();
-                webOriginOAuthTokenMap.put(WebOrigin.LOL_LOGIN, oauth);
-                webOriginStringTokenSupplierMap.put(WebOrigin.LOL_LOGIN, oauth);
-                virtualLeagueClient.setWebOriginStringTokenSupplierMap(webOriginStringTokenSupplierMap);
-                virtualLeagueClient.setWebOriginOAuthTokenMap(webOriginOAuthTokenMap);
-                awareness.next();
-            } else {
-                awareness.complete();
-            }
-        } catch (Exception e) {
-            callback.onStageError(e);
-        }
-        return future;
-    }
-
-
-    public String payload(String challenge) {
-        JSONObject object = new JSONObject();
-        object.put("acr_values", "");
-        object.put("claims", "");
-        object.put("client_id", "lol");
-        object.put("code_challenge", challenge);
-        object.put("code_challenge_method", "S256");
-        object.put("nonce", LocalCookieSupplier.generateNonce());
-        object.put("redirect_uri", "http://localhost/redirect");
-        object.put("response_type", "code");
-        object.put("scope", "openid link ban lol_region account");
-        return object.toString();
-    }
-
-    public StringTokenSupplier oauth(Gateway gateway, OAuthCode code) throws IOException {
-        String payload = payload(code.getChallenge());
-        RequestBody body = RequestBody.create(payload, Constant.APPLICATION_JSON);
-        Request request = new Request.Builder()
-                .url("https://auth.riotgames.com/api/v1/authorization")
-                .addHeader("User-Agent", virtualRiotClient.getInstance().getRiotClientUserAgent())
-                .addHeader("Cookie", virtualRiotClient.getInstance().getCookieManager().cook())
-                .addHeader("Content-Type", "application/json")
-                .addHeader("Accept", "application/json")
-                .post(body)
-                .build();
-        return QueryTokenParser.getTokens("lol-login", OkHttp3Client.execute(request, gateway).asString(), "\\?");
-    }
-
-    @Override
-    public IVirtualRiotClient getVirtualRiotClient() {
-        return virtualRiotClient;
-    }
-
-    @Override
-    public LocalLeagueFileVersion getLocalLeagueFileVersion() {
-        return localLeagueFileVersion;
-    }
-
-    @Override
-    public LocalGameFileVersion getLocalGameFileVersion() {
-        return localGameFileVersion;
-    }
-
-    @Override
-    public StringTokenSupplier getLeagueClientSupplier() {
-        return leagueClientSupplier;
     }
 
     @Override
@@ -262,13 +106,148 @@ public abstract class AbstractVirtualLeagueClientInstance implements IVirtualLea
     }
 
     @Override
-    public UserInformation getUserInformation() {
-        return userInformation;
+    public LocalLeagueFileVersion getLocalLeagueFileVersion() {
+        return localLeagueFileVersion;
     }
 
     @Override
-    public String getPlatformId() {
-        return platformId;
+    public LocalGameFileVersion getLocalGameFileVersion() {
+        return localGameFileVersion;
+    }
+
+    @Override
+    public String getRiotClientLeagueUserAgent(String rcp) {
+        return String.format(
+                "RiotClient/%s %s (Windows;10;;Professional, x64)",
+                localLeagueFileVersion.getVersionValue(platform, "RiotGamesApi.dll"),
+                rcp
+        );
+    }
+
+    @Override
+    public String getLeagueClientUserAgent(String rcp) {
+        return String.format(
+                "LeagueOfLegendsClient/%s (%s)",
+                localLeagueFileVersion.getVersionValue(platform, "LeagueClientUxRender.exe"),
+                rcp
+        );
+    }
+
+    private StringTokenSupplier getOAuthTokenSupplier(Authorization.Builder builder) throws IOException, NoSuchAlgorithmException {
+        OAuthCode challenge = OAuthCode.generate();
+        Authorization authorization = builder.setChallenge(challenge.getChallenge()).build();
+        ICookieSupplier cookieSupplier = virtualLeagueClientInstance.getCookieSupplier();
+        IResponse response = cookieSupplier.post(
+                getRiotClientLeagueUserAgent("rso-auth"),
+                authorization
+        );
+        StringTokenSupplier codeSupplier = QueryTokenParser.getTokens("oauth", response.asString(), "\\?");
+        String code = codeSupplier.getSimple("code");
+        OAuth auth = new OAuth(cookieSupplier, challenge, code);
+        auth.authenticate(virtualLeagueClientInstance.getGateway(), getRiotClientLeagueUserAgent("rso-auth"), null);
+        return auth;
+    }
+
+    private Authorization.Builder get() {
+        return new Authorization.Builder()
+                .setClientID(ClientID.LOL)
+                .setResponseTypes(ResponseType.CODE)
+                .setRedirectURI("http://localhost/redirect")
+                .setScopes(ClientScope.OPENID, ClientScope.LINK, ClientScope.BAN, ClientScope.LOL_REGION, ClientScope.ACCOUNT);
+    }
+
+    public CompletableFuture<VirtualLeagueClient> login(boolean ignoreSummoner, boolean selfRefresh, boolean complete, boolean minimal) throws LeagueException, UnsupportedEncodingException, NoSuchAlgorithmException {
+        UserInformation userInformation = virtualRiotClient.getClearUserinformation();
+        this.checkSummonerState(userInformation, ignoreSummoner);
+        this.configure(userInformation);
+
+
+        CompletableFuture<VirtualLeagueClient> future = new CompletableFuture<>();
+        IStageCallback<VirtualLeagueClient> callback = getClientCompletionCallback(future);
+        VirtualLeagueClient virtualLeagueClient = new VirtualLeagueClient(this);
+
+        StageAwareObject<VirtualLeagueClient> awareness = new StageAwareObject<>(callback, () -> virtualLeagueClient, 1);
+
+        Gateway gateway = virtualRiotClient.getInstance().getGateway();
+        ICookieSupplier cookieSupplier = virtualRiotClient.getInstance().getCookieSupplier();
+        try {
+            StringTokenSupplier auth = getOAuthTokenSupplier(get());
+
+            Userinfo userinfo = new Userinfo(cookieSupplier);
+            userinfo.authenticate(
+                    gateway,
+                    virtualLeagueClientInstance.getRiotClientUserAgent("rso-auth"),
+                    virtualRiotClient.getRiotClientSupplier()
+            );
+            userinfo.authenticate(gateway, getRiotClientLeagueUserAgent("rso-auth"), auth);
+            virtualLeagueClient.setAuthentication(Authentication.USERINFO, userinfo);
+
+            Entitlement entitlement = null;
+            if (!minimal) {
+                entitlement = new Entitlement(cookieSupplier, 1);
+                entitlement.authenticate(
+                        gateway,
+                        getRiotClientLeagueUserAgent("entitlements"),
+                        auth
+                );
+                virtualLeagueClient.setAuthentication(Authentication.ENTITLEMENT, entitlement);
+
+                StringTokenSupplier config = StringTokenSupplier.merge(
+                        "clientconfig",
+                        auth,
+                        entitlement
+                );
+                playerClientConfig = new PlayerClientConfig(gateway, platform, config);
+                publicClientConfig = new PublicClientConfig(gateway, platform);
+
+                XMPP xmpp = new XMPP(cookieSupplier);
+                xmpp.authenticate(
+                        gateway,
+                        virtualLeagueClientInstance.getRiotClientUserAgent("player-affinity"),
+                        virtualRiotClient.getRiotClientSupplier()
+                );
+                virtualLeagueClient.setAuthentication(Authentication.XMPP, xmpp);
+
+                RMS rms = new RMS(cookieSupplier);
+                rms.authenticate(
+                        gateway,
+                        virtualLeagueClientInstance.getRiotClientUserAgent("player-affinity"),
+                        virtualRiotClient.getRiotClientSupplier()
+                );
+                virtualLeagueClient.setAuthentication(Authentication.RMS, rms);
+            }
+
+            if (complete) {
+                StringTokenSupplier queue = StringTokenSupplier.merge("queue", auth, userinfo, entitlement);
+                LoginQueue loginQueue = new LoginQueue(cookieSupplier, publicClientConfig);
+                loginQueue.authenticate(gateway, getLeagueClientUserAgent("rcp-be-lol-login"), queue);
+                virtualLeagueClient.setAuthentication(Authentication.LOGIN_QUEUE, loginQueue);
+
+                Session session = new Session(cookieSupplier, publicClientConfig, userInformation);
+                session.authenticate(gateway, getLeagueClientUserAgent("rcp-be-lol-league-session"), loginQueue);
+                virtualLeagueClient.setAuthentication(Authentication.SESSION, session);
+                RefreshTask task = new RefreshTask(
+                        session,
+                        gateway,
+                        getLeagueClientUserAgent("(rcp-be-lol-league-session)"),
+                        session
+                );
+                RefreshManager.submit(task, 1, 1);
+            }
+            if (selfRefresh) {
+                this.tokenStorage = new ClientTokenStorage(this);
+                this.scheduledRefresh = RefreshManager.submit(tokenStorage, 0, 60);
+            }
+            awareness.complete();
+        } catch (Exception e) {
+            callback.onStageError(e);
+        }
+        return future;
+    }
+
+    @Override
+    public IVirtualRiotClient getVirtualRiotClient() {
+        return virtualRiotClient;
     }
 
     @Override
@@ -276,7 +255,4 @@ public abstract class AbstractVirtualLeagueClientInstance implements IVirtualLea
         return platform;
     }
 
-    abstract IYamlSupplier getYamlSupplier();
-
-    abstract boolean isSelfUpdate();
 }

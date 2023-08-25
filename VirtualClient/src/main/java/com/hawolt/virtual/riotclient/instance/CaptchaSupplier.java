@@ -11,13 +11,18 @@ import java.io.IOException;
 
 public abstract class CaptchaSupplier {
 
-    public static CaptchaSupplier blank = new CaptchaSupplier() {
+    public static CaptchaSupplier blank;
 
-        @Override
-        public String solve(String userAgent, String rqData) {
-            return null;
-        }
-    };
+    static {
+        blank = new CaptchaSupplier() {
+
+            @Override
+            public String solve(String userAgent, String rqData) {
+                return null;
+            }
+        };
+    }
 
     public abstract String solve(String userAgent, String rqData) throws IOException, CaptchaException, InterruptedException;
+
 }

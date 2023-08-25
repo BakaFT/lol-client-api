@@ -1,4 +1,4 @@
-package com.hawolt.virtual.riotclient;
+package com.hawolt.virtual.client;
 
 /**
  * Created: 23/08/2023 13:24
@@ -6,7 +6,7 @@ package com.hawolt.virtual.riotclient;
  **/
 
 public class RiotClientException extends Exception {
-    public RiotClientException(String message) {
-        super(message);
+    public RiotClientException(RiotClientExceptionType type) {
+        super(type.name());
     }
 }

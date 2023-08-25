@@ -1,8 +1,6 @@
 package com.hawolt.virtual.riotclient.instance;
 
 import com.hawolt.cryptography.SHA256;
-import com.hawolt.virtual.client.ILoginStateConsumer;
-import com.hawolt.virtual.client.LoginState;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,13 +22,11 @@ public abstract class MultiFactorSupplier implements Supplier<String> {
 
     private final Map<String, String> cache = new HashMap<>();
 
-    public String get(String username, String password, ILoginStateConsumer consumer) {
+    public String get(String username, String password) {
         String identifier = SHA256.hash(username + password);
         if (!cache.containsKey(identifier)) {
-            consumer.onStateChange(LoginState.FETCH_2FA_CODE);
             cache.put(identifier, get());
         }
-        consumer.onStateChange(LoginState.RETURN_2FA_CODE);
         return cache.get(identifier);
     }
 

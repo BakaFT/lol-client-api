@@ -31,7 +31,7 @@ public class OAuthCode {
         return verifier;
     }
 
-    private String generateCodeVerifier() throws UnsupportedEncodingException {
+    private String generateCodeVerifier() {
         SecureRandom secureRandom = new SecureRandom();
         byte[] codeVerifier = new byte[64];
         secureRandom.nextBytes(codeVerifier);

@@ -1,49 +1,34 @@
 package com.hawolt.virtual.riotclient.userinfo;
 
+import com.hawolt.virtual.misc.DynamicObject;
 import org.json.JSONObject;
-
-import java.util.Base64;
 
 /**
  * Created: 13/01/2023 14:20
  * Author: Twitter @hawolt
  **/
 
-public class RiotClientUser {
-    private final String sub;
-    private String dataRegion;
-    private long dataUserId;
+public class RiotClientUser extends DynamicObject {
 
-    public RiotClientUser(String jwt) {
-        JSONObject object = new JSONObject(new String(Base64.getDecoder().decode(jwt.split("\\.")[1])));
-        this.sub = object.getString("sub");
-        JSONObject data = object.getJSONObject("dat");
-        if (data.has("u")) this.dataUserId = data.getLong("u");
-        if (data.has("r")) this.dataRegion = data.getString("r");
+    public RiotClientUser(JSONObject object) {
+        super(object);
     }
 
-    public String getSub() {
-        return sub;
+    public String getPUUID() {
+        return getByKeyNonNullOrThrow("sub", () -> new RuntimeException("Invalid RiotClientUser state"));
     }
 
     public String getDataRegion() {
-        return dataRegion;
+        JSONObject data = getByKeyNonNullOrThrow("dat", () -> new RuntimeException("Invalid RiotClientUser state"));
+        return data.has("r") && !data.isNull("r") ? data.getString("r") : null;
     }
 
     public long getDataUserId() {
-        return dataUserId;
+        JSONObject data = getByKeyNonNullOrThrow("dat", () -> new RuntimeException("Invalid RiotClientUser state"));
+        return data.has("r") && !data.isNull("r") ? data.getLong("u") : 0L;
     }
 
     public boolean isLeagueAccountAssociated() {
-        return dataUserId != 0L && dataRegion != null;
-    }
-
-    @Override
-    public String toString() {
-        return "RiotClientUser{" +
-                "sub='" + sub + '\'' +
-                ", dataRegion='" + dataRegion + '\'' +
-                ", dataUserId=" + dataUserId +
-                '}';
+        return getDataRegion() != null && getDataUserId() != 0L;
     }
 }

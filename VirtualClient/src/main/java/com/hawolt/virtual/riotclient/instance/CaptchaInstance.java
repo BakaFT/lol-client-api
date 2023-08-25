@@ -1,5 +1,6 @@
 package com.hawolt.virtual.riotclient.instance;
 
+import com.hawolt.virtual.misc.DynamicObject;
 import org.json.JSONObject;
 
 /**
@@ -7,10 +8,8 @@ import org.json.JSONObject;
  * Author: Twitter @hawolt
  **/
 
-public class CaptchaInstance extends JSONObject {
+public class CaptchaInstance extends DynamicObject {
     public CaptchaInstance(JSONObject object) {
-        for (String key : object.keySet()) {
-            put(key, object.get(key));
-        }
+        super(object);
     }
 }

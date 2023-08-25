@@ -19,7 +19,7 @@ public abstract class ClientConfig {
     private final Gateway gateway;
     protected JSONObject cache;
 
-    public ClientConfig(Gateway gateway, Platform platform) throws IOException {
+    public ClientConfig(Gateway gateway, Platform platform) {
         this.platform = platform;
         this.gateway = gateway;
     }
@@ -31,6 +31,10 @@ public abstract class ClientConfig {
         return cache;
     }
 
+    public Platform getPlatform() {
+        return platform;
+    }
+
     protected abstract Request request();
 
     protected abstract String getType();
@@ -39,7 +43,7 @@ public abstract class ClientConfig {
         return String.format(
                 "https://clientconfig.rpg.riotgames.com/api/v1/config/%s?app=league_of_legends&region=%s",
                 getType(),
-                platform.name()
+                platform == Platform.EUW1 ? "EUW" : platform.name()
         );
     }
 }

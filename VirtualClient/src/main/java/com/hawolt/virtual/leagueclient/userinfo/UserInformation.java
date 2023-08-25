@@ -3,8 +3,6 @@ package com.hawolt.virtual.leagueclient.userinfo;
 import com.hawolt.virtual.leagueclient.userinfo.child.*;
 import org.json.JSONObject;
 
-import java.util.Base64;
-
 /**
  * Created: 10/01/2023 22:02
  * Author: Twitter @hawolt

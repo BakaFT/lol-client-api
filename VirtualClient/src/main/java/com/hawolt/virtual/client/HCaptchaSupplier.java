@@ -33,7 +33,6 @@ public class HCaptchaSupplier extends CaptchaSupplier {
                 .setEnterpriseData(new JSONObject().put("rqdata", rqData))
                 .setWebsiteURL("https://authenticate.riotgames.com/api/v1/login")
                 .setWebsiteKey("019f1553-3845-481c-a6f5-5a60ccf6d830")
-                .setUserAgent(userAgent)
                 .setInvisible(true)
                 .build();
         ICaptchaTask task = solver.create(provider.get());

@@ -1,13 +1,7 @@
 package com.hawolt.virtual.leagueclient.client;
 
-import com.hawolt.generic.token.impl.StringTokenSupplier;
-import com.hawolt.version.IVersionSupplier;
-import com.hawolt.virtual.leagueclient.authentication.IAuthentication;
+import com.hawolt.virtual.leagueclient.authentication.AbstractTokenSetup;
 import com.hawolt.virtual.leagueclient.instance.IVirtualLeagueClientInstance;
-import com.hawolt.virtual.leagueclient.refresh.IRefreshStatus;
-import com.hawolt.virtual.leagueclient.refresh.RefreshGroup;
-import com.hawolt.virtual.leagueclient.refresh.Refreshable;
-import com.hawolt.virtual.leagueclient.refresh.ScheduledRefresh;
 import com.hawolt.virtual.riotclient.client.IVirtualRiotClient;
 import com.hawolt.virtual.riotclient.instance.IVirtualRiotClientInstance;
 
@@ -20,13 +14,7 @@ import java.util.Set;
 
 public interface IVirtualLeagueClient {
 
-    ScheduledRefresh<?> refresh(IRefreshStatus status, IAuthentication authentication, IVersionSupplier versionSupplier, StringTokenSupplier tokenSupplier, long initial, long minutes);
-
-    ScheduledRefresh<?> refresh(Refreshable refreshable, long initial, long minutes);
-
-    ScheduledRefresh<?> refresh(RefreshGroup group, long initial, long minutes);
-
-    void setAuthentication(Authentication type, IAuthentication authentication);
+    void setAuthentication(Authentication type, AbstractTokenSetup authentication);
 
     IVirtualLeagueClientInstance getVirtualLeagueClientInstance();
 
@@ -34,9 +22,7 @@ public interface IVirtualLeagueClient {
 
     Set<Authentication> getAvailableAuthenticators();
 
+    AbstractTokenSetup get(Authentication type);
+
     IVirtualRiotClient getVirtualRiotClient();
-
-    IAuthentication get(Authentication type);
-
-    void onError(Throwable throwable);
 }
