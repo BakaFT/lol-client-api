@@ -66,6 +66,17 @@ public class ClientTokenStorage implements Authorizable, IRefreshable {
         });
     }
 
+    public Userinfo getUserinfo() {
+        return userinfo;
+    }
+
+    public Map<Integer, Entitlement> getMap() {
+        return map;
+    }
+
+    public StringTokenSupplier getTokenSupplier() {
+        return tokenSupplier;
+    }
 
     @Override
     public void onRefreshException(Throwable throwable) {
