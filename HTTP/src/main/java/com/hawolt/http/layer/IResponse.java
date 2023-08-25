@@ -35,7 +35,7 @@ public interface IResponse {
         }
         if (response.headers().containsKey("content-type") &&
                 response.headers().get("content-type").stream().anyMatch(o -> !o.startsWith("image"))) {
-            builder.append(System.lineSeparator()).append(response.asString());
+            builder.append(System.lineSeparator()).append(Diffuser.vaporize(response.asString()));
         }
         return builder.toString();
     }
