@@ -8,6 +8,7 @@ import com.hawolt.generic.stage.StageAwareObject;
 import com.hawolt.generic.token.impl.StringTokenSupplier;
 import com.hawolt.http.auth.Gateway;
 import com.hawolt.http.layer.IResponse;
+import com.hawolt.logger.Logger;
 import com.hawolt.version.local.LocalGameFileVersion;
 import com.hawolt.version.local.LocalLeagueFileVersion;
 import com.hawolt.virtual.client.OAuthCode;
@@ -18,9 +19,7 @@ import com.hawolt.virtual.leagueclient.client.Authentication;
 import com.hawolt.virtual.leagueclient.client.VirtualLeagueClient;
 import com.hawolt.virtual.leagueclient.exception.LeagueException;
 import com.hawolt.virtual.leagueclient.userinfo.UserInformation;
-import com.hawolt.virtual.refresh.RefreshManager;
-import com.hawolt.virtual.refresh.RefreshTask;
-import com.hawolt.virtual.refresh.ScheduledRefresh;
+import com.hawolt.virtual.refresh.*;
 import com.hawolt.virtual.riotclient.client.IVirtualRiotClient;
 import com.hawolt.virtual.riotclient.instance.IVirtualRiotClientInstance;
 import com.hawolt.yaml.IYamlSupplier;
@@ -30,6 +29,7 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -37,7 +37,7 @@ import java.util.concurrent.CompletableFuture;
  * Author: Twitter @hawolt
  **/
 
-public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClientInstance {
+public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClientInstance, IRefreshable {
 
     private final IVirtualRiotClientInstance virtualLeagueClientInstance;
     private LocalLeagueFileVersion localLeagueFileVersion;
@@ -182,6 +182,7 @@ public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClient
         ICookieSupplier cookieSupplier = virtualRiotClient.getInstance().getCookieSupplier();
         try {
             leagueTokenSupplier = getOAuthTokenSupplier(get());
+            RefreshManager.submit(this, 60, 60);
 
             Userinfo userinfo = new Userinfo(cookieSupplier);
             userinfo.authenticate(
@@ -242,7 +243,7 @@ public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClient
                         getLeagueClientUserAgent("(rcp-be-lol-league-session)"),
                         session
                 );
-                RefreshManager.submit(task, 1, 1);
+                RefreshManager.submit(task, 5, 5);
             }
             if (selfRefresh) {
                 this.tokenStorage = new ClientTokenStorage(this);
@@ -280,4 +281,26 @@ public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClient
         return platformId;
     }
 
+    @Override
+    public List<ExceptionalRefreshable> getRefreshableList() {
+        return Collections.singletonList(
+                () -> AbstractVirtualLeagueClientInstance.this.leagueTokenSupplier = getOAuthTokenSupplier(get())
+        );
+    }
+
+    @Override
+    public void onRefreshException(Throwable throwable) {
+        Logger.error(throwable);
+    }
+
+    @Override
+    public void refresh() {
+        for (ExceptionalRefreshable refreshable : getRefreshableList()) {
+            try {
+                refreshable.refresh();
+            } catch (Exception e) {
+                Logger.error(e);
+            }
+        }
+    }
 }
