@@ -1,4 +1,4 @@
-package com.hawolt.virtual.client;
+package com.hawolt.virtual.client.captcha;
 
 import com.hawolt.ICaptchaProvider;
 import com.hawolt.ICaptchaResult;
