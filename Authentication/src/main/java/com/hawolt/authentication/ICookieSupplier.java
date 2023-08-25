@@ -1,11 +1,11 @@
 package com.hawolt.authentication;
 
-import com.hawolt.generic.data.Platform;
-import com.hawolt.http.auth.Gateway;
-import com.hawolt.version.IVersionSupplier;
+import com.hawolt.http.layer.IResponse;
 
 import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.UUID;
 
 /**
  * Created: 09/01/2023 21:17
@@ -13,15 +13,17 @@ import java.util.concurrent.CompletableFuture;
  **/
 
 public interface ICookieSupplier {
-    String getClientCookie(IVersionSupplier versionSupplier, CookieType type, Platform platform, Gateway gateway) throws IOException;
+    static String generateClientNonce() {
+        return new String(Base64.getEncoder().encode(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8))).substring(0, 22);
+    }
 
-    String getClientCookie(IVersionSupplier versionSupplier, CookieType type, Platform platform) throws IOException;
+    IResponse post(String userAgent, Authorization authorization) throws IOException;
 
-    CompletableFuture<String> getWebCookie(IVersionSupplier versionSupplier, WebOrigin origin, Platform platform);
+    void configure(String userAgent) throws IOException;
 
-    String getClientCookie(CookieType type, Platform platform, Gateway gateway) throws IOException;
+    IResponse handle(IResponse response);
 
-    String getClientCookie(CookieType type, Platform platform) throws IOException;
+    String getCookie(String hostname);
 
-    CompletableFuture<String> getWebCookie(WebOrigin origin, Platform platform);
+    boolean has(String cookie);
 }

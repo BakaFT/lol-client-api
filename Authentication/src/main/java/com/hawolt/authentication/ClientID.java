@@ -5,7 +5,7 @@ package com.hawolt.authentication;
  * Author: Twitter @hawolt
  **/
 
-public enum CookieType {
+public enum ClientID {
     LOL, RIOT_CLIENT;
 
     @Override
