@@ -27,7 +27,6 @@ import com.hawolt.yaml.IYamlSupplier;
 import com.hawolt.yaml.impl.YamlSupplier;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,9 +40,10 @@ import java.util.concurrent.CompletableFuture;
 public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClientInstance {
 
     private final IVirtualRiotClientInstance virtualLeagueClientInstance;
-    private final IVirtualRiotClient virtualRiotClient;
     private LocalLeagueFileVersion localLeagueFileVersion;
+    private final IVirtualRiotClient virtualRiotClient;
     private LocalGameFileVersion localGameFileVersion;
+    private StringTokenSupplier leagueTokenSupplier;
     private PlayerClientConfig playerClientConfig;
     private PublicClientConfig publicClientConfig;
     private ScheduledRefresh<?> scheduledRefresh;
@@ -106,6 +106,11 @@ public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClient
     }
 
     @Override
+    public ClientTokenStorage getClientTokenStorage() {
+        return null;
+    }
+
+    @Override
     public LocalLeagueFileVersion getLocalLeagueFileVersion() {
         return localLeagueFileVersion;
     }
@@ -113,6 +118,11 @@ public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClient
     @Override
     public LocalGameFileVersion getLocalGameFileVersion() {
         return localGameFileVersion;
+    }
+
+    @Override
+    public StringTokenSupplier getLeagueClientSupplier() {
+        return null;
     }
 
     @Override
@@ -156,7 +166,7 @@ public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClient
                 .setScopes(ClientScope.OPENID, ClientScope.LINK, ClientScope.BAN, ClientScope.LOL_REGION, ClientScope.ACCOUNT);
     }
 
-    public CompletableFuture<VirtualLeagueClient> login(boolean ignoreSummoner, boolean selfRefresh, boolean complete, boolean minimal) throws LeagueException, UnsupportedEncodingException, NoSuchAlgorithmException {
+    public CompletableFuture<VirtualLeagueClient> login(boolean ignoreSummoner, boolean selfRefresh, boolean complete, boolean minimal) throws LeagueException {
         UserInformation userInformation = virtualRiotClient.getClearUserinformation();
         this.checkSummonerState(userInformation, ignoreSummoner);
         this.configure(userInformation);
@@ -171,7 +181,7 @@ public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClient
         Gateway gateway = virtualRiotClient.getInstance().getGateway();
         ICookieSupplier cookieSupplier = virtualRiotClient.getInstance().getCookieSupplier();
         try {
-            StringTokenSupplier auth = getOAuthTokenSupplier(get());
+            leagueTokenSupplier = getOAuthTokenSupplier(get());
 
             Userinfo userinfo = new Userinfo(cookieSupplier);
             userinfo.authenticate(
@@ -179,7 +189,7 @@ public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClient
                     virtualLeagueClientInstance.getRiotClientUserAgent("rso-auth"),
                     virtualRiotClient.getRiotClientSupplier()
             );
-            userinfo.authenticate(gateway, getRiotClientLeagueUserAgent("rso-auth"), auth);
+            userinfo.authenticate(gateway, getRiotClientLeagueUserAgent("rso-auth"), leagueTokenSupplier);
             virtualLeagueClient.setAuthentication(Authentication.USERINFO, userinfo);
 
             Entitlement entitlement = null;
@@ -188,13 +198,13 @@ public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClient
                 entitlement.authenticate(
                         gateway,
                         getRiotClientLeagueUserAgent("entitlements"),
-                        auth
+                        leagueTokenSupplier
                 );
                 virtualLeagueClient.setAuthentication(Authentication.ENTITLEMENT, entitlement);
 
                 StringTokenSupplier config = StringTokenSupplier.merge(
                         "clientconfig",
-                        auth,
+                        leagueTokenSupplier,
                         entitlement
                 );
                 playerClientConfig = new PlayerClientConfig(gateway, platform, config);
@@ -218,7 +228,7 @@ public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClient
             }
 
             if (complete) {
-                StringTokenSupplier queue = StringTokenSupplier.merge("queue", auth, userinfo, entitlement);
+                StringTokenSupplier queue = StringTokenSupplier.merge("queue", leagueTokenSupplier, userinfo, entitlement);
                 LoginQueue loginQueue = new LoginQueue(cookieSupplier, publicClientConfig);
                 loginQueue.authenticate(gateway, getLeagueClientUserAgent("rcp-be-lol-login"), queue);
                 virtualLeagueClient.setAuthentication(Authentication.LOGIN_QUEUE, loginQueue);
@@ -251,8 +261,23 @@ public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClient
     }
 
     @Override
+    public UserInformation getUserInformation() {
+        return virtualRiotClient.getClearUserinformation();
+    }
+
+    @Override
+    public IYamlSupplier getYamlSupplier() {
+        return yamlSupplier;
+    }
+
+    @Override
     public Platform getPlatform() {
         return platform;
+    }
+
+    @Override
+    public String getPlatformId() {
+        return platformId;
     }
 
 }

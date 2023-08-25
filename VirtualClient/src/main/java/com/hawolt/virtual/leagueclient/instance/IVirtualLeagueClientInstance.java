@@ -1,11 +1,18 @@
 package com.hawolt.virtual.leagueclient.instance;
 
 import com.hawolt.generic.data.Platform;
+import com.hawolt.generic.token.impl.StringTokenSupplier;
 import com.hawolt.version.local.LocalGameFileVersion;
 import com.hawolt.version.local.LocalLeagueFileVersion;
 import com.hawolt.virtual.clientconfig.impl.PlayerClientConfig;
 import com.hawolt.virtual.clientconfig.impl.PublicClientConfig;
+import com.hawolt.virtual.leagueclient.client.VirtualLeagueClient;
+import com.hawolt.virtual.leagueclient.exception.LeagueException;
+import com.hawolt.virtual.leagueclient.userinfo.UserInformation;
 import com.hawolt.virtual.riotclient.client.IVirtualRiotClient;
+import com.hawolt.yaml.IYamlSupplier;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Created: 13/01/2023 11:46
@@ -13,40 +20,31 @@ import com.hawolt.virtual.riotclient.client.IVirtualRiotClient;
  **/
 
 public interface IVirtualLeagueClientInstance {
-    /*   CompletableFuture<VirtualLeagueClient> login(boolean ignoreSummoner, boolean selfRefresh, boolean complete, boolean minimal) throws LeagueException;
+    CompletableFuture<VirtualLeagueClient> login(boolean ignoreSummoner, boolean selfRefresh, boolean complete, boolean minimal) throws LeagueException;
 
-       CompletableFuture<VirtualLeagueClient> login(boolean ignoreSummoner, boolean selfRefresh) throws LeagueException;
+    LocalLeagueFileVersion getLocalLeagueFileVersion();
 
-       CompletableFuture<VirtualLeagueClient> login() throws LeagueException;
+    String getRiotClientLeagueUserAgent(String rcp);
 
-       CompletableFuture<VirtualLeagueClient> chat() throws LeagueException;
+    LocalGameFileVersion getLocalGameFileVersion();
 
-    //   StringTokenSupplier oauth(Gateway gateway, Platform platform);
+    StringTokenSupplier getLeagueClientSupplier();
 
+    String getLeagueClientUserAgent(String rcp);
 
-
-       StringTokenSupplier getLeagueClientSupplier();
-
-
-
-       UserInformation getUserInformation();
-
-       String getPlatformId();
-
-    ;*/
     PlayerClientConfig getPlayerClientConfig();
 
     PublicClientConfig getPublicClientConfig();
 
-    LocalLeagueFileVersion getLocalLeagueFileVersion();
-
-    LocalGameFileVersion getLocalGameFileVersion();
-
-    String getRiotClientLeagueUserAgent(String rcp);
-
-    String getLeagueClientUserAgent(String rcp);
+    ClientTokenStorage getClientTokenStorage();
 
     IVirtualRiotClient getVirtualRiotClient();
 
+    UserInformation getUserInformation();
+
+    IYamlSupplier getYamlSupplier();
+
     Platform getPlatform();
+
+    String getPlatformId();
 }
