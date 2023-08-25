@@ -107,7 +107,7 @@ public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClient
 
     @Override
     public ClientTokenStorage getClientTokenStorage() {
-        return null;
+        return tokenStorage;
     }
 
     @Override
@@ -122,7 +122,7 @@ public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClient
 
     @Override
     public StringTokenSupplier getLeagueClientSupplier() {
-        return null;
+        return leagueTokenSupplier;
     }
 
     @Override
