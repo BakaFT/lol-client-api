@@ -12,3 +12,5 @@ target/*
 # test files
 */src/test/*
 src/test/*
+# tmp files
+**/tmp/**
