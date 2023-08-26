@@ -43,7 +43,7 @@ public abstract class ClientConfig {
         return String.format(
                 "https://clientconfig.rpg.riotgames.com/api/v1/config/%s?app=league_of_legends&region=%s",
                 getType(),
-                platform == Platform.EUW1 ? "EUW" : platform.name()
+                platform.getFriendlyName()
         );
     }
 }
