@@ -105,13 +105,11 @@ public class VirtualRiotClient implements IVirtualRiotClient, IRefreshable {
     }
 
     @Override
-    public VirtualLeagueClientInstance createVirtualLeagueClientInstance() throws LeagueException, IOException {
+    public VirtualLeagueClientInstance createVirtualLeagueClientInstance() throws IOException {
         String jwt = instance.getRiotClientTokenSupplier().getSimple("access_token");
         JSONObject object = new JSONObject(new String(Base64.getDecoder().decode(jwt.split("\\.")[1])));
         this.riotClientUser = new RiotClientUser(object);
-        if (!riotClientUser.isLeagueAccountAssociated()) {
-            throw new LeagueException(LeagueException.ErrorType.NO_LEAGUE_ACCOUNT);
-        }
+
         Userinfo clear = new Userinfo(instance.getCookieSupplier());
         clear.authenticate(instance.getGateway(), instance.getRiotClientUserAgent("rso-auth"), riotClientSupplier);
         this.userInformation = new UserInformation(new JSONObject(clear.getToken()));

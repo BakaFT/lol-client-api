@@ -44,16 +44,18 @@ public class AbstractVirtualRiotClientInstance implements IVirtualRiotClientInst
     }
 
     public VirtualRiotClient login(String username, String password, MultiFactorSupplier multifactor, CaptchaSupplier captchaSupplier) throws IOException, RiotClientException, CaptchaException, InterruptedException {
-        if (!cookieSupplier.has("__cf_bm")) cookieSupplier.configure(getRiotClientUserAgent("rso-auth"));
-        if (cookieSupplier.has("__cf_bm")) cookieSupplier.configure(getRiotClientUserAgent("rso-auth"));
-        this.cookieSupplier.handle(submitDeleteRequest());
-        CaptchaInfo info = getCaptchaInfo();
-        CaptchaInstance instance = info.getCurrentCaptchaInstance();
-        String captcha = captchaSupplier.solve(getRiotClientUserAgentCEF(), instance.getString("data"));
-        IResponse login = login(username, password, String.format("%s %s", info.getType(), captcha), multifactor);
-        JSONObject object = new JSONObject(login.asString()).getJSONObject("success");
-        String token = object.getString("login_token");
-        this.cookieSupplier.handle(getSSID(token));
+        if (!cookieSupplier.isInCompletedState()) {
+            if (!cookieSupplier.has("__cf_bm")) cookieSupplier.configure(getRiotClientUserAgent("rso-auth"));
+            if (cookieSupplier.has("__cf_bm")) cookieSupplier.configure(getRiotClientUserAgent("rso-auth"));
+            this.cookieSupplier.handle(submitDeleteRequest());
+            CaptchaInfo info = getCaptchaInfo();
+            CaptchaInstance instance = info.getCurrentCaptchaInstance();
+            String captcha = captchaSupplier.solve(getRiotClientUserAgentCEF(), instance.getString("data"));
+            IResponse login = login(username, password, String.format("%s %s", info.getType(), captcha), multifactor);
+            JSONObject object = new JSONObject(login.asString()).getJSONObject("success");
+            String token = object.getString("login_token");
+            this.cookieSupplier.handle(getSSID(token));
+        }
         this.tokenSupplier = getTokenSupplier(getAuthorizationSupplier().get());
         return new VirtualRiotClient(this, username, password, multifactor, captchaSupplier);
     }

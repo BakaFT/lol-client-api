@@ -17,18 +17,4 @@ public class RiotClientUser extends DynamicObject {
     public String getPUUID() {
         return getByKeyNonNullOrThrow("sub", () -> new RuntimeException("Invalid RiotClientUser state"));
     }
-
-    public String getDataRegion() {
-        JSONObject data = getByKeyNonNullOrThrow("dat", () -> new RuntimeException("Invalid RiotClientUser state"));
-        return data.has("r") && !data.isNull("r") ? data.getString("r") : null;
-    }
-
-    public long getDataUserId() {
-        JSONObject data = getByKeyNonNullOrThrow("dat", () -> new RuntimeException("Invalid RiotClientUser state"));
-        return data.has("r") && !data.isNull("r") ? data.getLong("u") : 0L;
-    }
-
-    public boolean isLeagueAccountAssociated() {
-        return getDataRegion() != null && getDataUserId() != 0L;
-    }
 }
