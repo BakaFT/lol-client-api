@@ -5,6 +5,8 @@ import com.hawolt.http.OkHttp3Client;
 import com.hawolt.http.layer.IResponse;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -38,11 +40,34 @@ public class LocalCookieSupplier implements ICookieSupplier {
     }
 
     @Override
+    public void loadCookieState(JSONArray o) {
+        for (int i = 0; i < o.length(); i++) {
+            JSONObject object = o.getJSONObject(i);
+            Cookie cookie = new Cookie(object);
+            map.put(cookie.getName(), cookie);
+        }
+    }
+
+    @Override
+    public JSONArray getCurrentCookieState() {
+        JSONArray cookies = new JSONArray();
+        List<Cookie> list = map.values().stream()
+                .filter(Cookie::isNotExpired)
+                .filter(Cookie::hasValue)
+                .toList();
+        for (Cookie cookie : list) {
+            cookies.put(cookie.asJSON());
+        }
+        return cookies;
+    }
+
+    @Override
     public String getCookie(String hostname) {
         synchronized (lock) {
             return map.values().stream()
                     .filter(cookie -> cookie.isValidFor(hostname))
                     .filter(Cookie::isNotExpired)
+                    .filter(Cookie::hasValue)
                     .map(Cookie::get)
                     .collect(Collectors.joining("; "));
         }
@@ -52,6 +77,7 @@ public class LocalCookieSupplier implements ICookieSupplier {
     public boolean has(String cookie) {
         synchronized (lock) {
             return map.values().stream()
+                    .filter(Cookie::hasValue)
                     .filter(Cookie::isNotExpired)
                     .anyMatch(o -> o.getName().equalsIgnoreCase(cookie));
         }
@@ -89,6 +115,18 @@ public class LocalCookieSupplier implements ICookieSupplier {
         String cookie = getCookie("riotgames.com");
         if (cookie != null && !cookie.isEmpty()) builder.addHeader("Cookie", cookie);
         return handle(OkHttp3Client.execute(builder.build()));
+    }
+
+    @Override
+    public boolean isInCompletedState() {
+        return map.containsKey("sub") && map.get("sub").isNotExpired()
+                //     && map.containsKey("tdid") && map.get("tdid").isNotExpired()
+                && map.containsKey("clid") && map.get("clid").isNotExpired()
+                && map.containsKey("csid") && map.get("csid").isNotExpired()
+                && map.containsKey("ssid") && map.get("ssid").isNotExpired();
+        //  && map.containsKey("__cflb") && map.get("__cflb").isNotExpired()
+        // && map.containsKey("__cf_bm") && map.get("__cf_bm").isNotExpired()
+        //&& map.containsKey("authenticator.sid") && map.get("authenticator.sid").isNotExpired();
     }
 
 }

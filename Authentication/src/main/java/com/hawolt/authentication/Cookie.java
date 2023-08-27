@@ -1,5 +1,8 @@
 package com.hawolt.authentication;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -41,6 +44,21 @@ public class Cookie {
         map.put("domain", Arrays.stream(origin.split("\\.")).skip(children.length <= 2 ? 0 : 1).collect(Collectors.joining(".")));
     }
 
+    public Cookie(JSONObject o) {
+        this.name = o.getString("name");
+        this.value = o.getString("value");
+        this.origin = o.getString("origin");
+        JSONArray flags = o.getJSONArray("flags");
+        for (int i = 0; i < flags.length(); i++) {
+            switches.add(flags.getString(i));
+        }
+        JSONArray metadata = o.getJSONArray("metadata");
+        for (int i = 0; i < metadata.length(); i++) {
+            JSONObject meta = metadata.getJSONObject(i);
+            map.put(meta.getString("key"), meta.getString("value"));
+        }
+    }
+
     public String get() {
         return String.join("=", name, value);
     }
@@ -53,6 +71,10 @@ public class Cookie {
         } catch (ParseException e) {
             return false;
         }
+    }
+
+    public boolean hasValue() {
+        return value != null && !value.isEmpty();
     }
 
     public boolean isValidFor(String hostname) {
@@ -73,6 +95,27 @@ public class Cookie {
 
     public boolean isHttpOnly() {
         return switches.contains("HttpOnly");
+    }
+
+    public JSONObject asJSON() {
+        JSONObject object = new JSONObject();
+        object.put("name", name);
+        object.put("value", value);
+        object.put("origin", origin);
+        JSONArray flags = new JSONArray();
+        for (String flag : switches) {
+            flags.put(flag);
+        }
+        object.put("flags", flags);
+        JSONArray metadata = new JSONArray();
+        for (String key : map.keySet()) {
+            JSONObject meta = new JSONObject();
+            meta.put("key", key);
+            meta.put("value", map.get(key));
+            metadata.put(meta);
+        }
+        object.put("metadata", metadata);
+        return object;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.hawolt.authentication;
 
 import com.hawolt.http.layer.IResponse;
+import org.json.JSONArray;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -23,7 +24,13 @@ public interface ICookieSupplier {
 
     IResponse handle(IResponse response);
 
+    JSONArray getCurrentCookieState();
+
+    void loadCookieState(JSONArray o);
+
     String getCookie(String hostname);
+
+    boolean isInCompletedState();
 
     boolean has(String cookie);
 }
