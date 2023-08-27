@@ -1,5 +1,7 @@
 package com.hawolt.http.integrity;
 
+import com.hawolt.http.layer.IResponse;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -10,6 +12,7 @@ import java.util.Set;
  **/
 
 public class Diffuser {
+    public static boolean PRIVACY_ENHANCEMENT = true;
     private final static Set<String> set = new HashSet<>();
 
     public static void add(String o) {
@@ -17,8 +20,9 @@ public class Diffuser {
     }
 
     public static String vaporize(String tarnished) {
+        if (!PRIVACY_ENHANCEMENT) return tarnished;
         for (String key : new ArrayList<>(set)) {
-            if (tarnished.contains(key)) tarnished = tarnished.replace(key, "${REDACTED_USER_CRITICAL_VALUE}");
+            if (tarnished.contains(key)) tarnished = tarnished.replace(key, IResponse.DEFAULT);
         }
         return tarnished;
     }
