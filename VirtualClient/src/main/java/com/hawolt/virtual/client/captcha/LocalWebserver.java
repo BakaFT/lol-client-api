@@ -46,22 +46,12 @@ public class LocalWebserver {
 
     private static void browse(String url) throws IOException {
         String os = System.getProperty("os.name").toLowerCase();
+        Runtime rt = Runtime.getRuntime();
         if (os.contains("mac")) {
-            Runtime rt = Runtime.getRuntime();
             rt.exec("open " + url);
         } else if (os.contains("nix") || os.contains("nux")) {
-            Runtime rt = Runtime.getRuntime();
-            String[] browsers = {"google-chrome", "firefox", "mozilla", "epiphany", "konqueror", "netscape", "opera", "links", "lynx"};
-            StringBuilder command = new StringBuilder();
-            for (int i = 0; i < browsers.length; i++)
-                if (i == 0) {
-                    command.append(String.format("%s \"%s\"", browsers[i], url));
-                } else {
-                    command.append(String.format(" || %s \"%s\"", browsers[i], url));
-                }
-            rt.exec(new String[]{"sh", "-c", command.toString()});
+            rt.exec(new String[]{"xdg-open", url});
         } else {
-            Runtime rt = Runtime.getRuntime();
             rt.exec("rundll32 url.dll,FileProtocolHandler " + url);
         }
     }
