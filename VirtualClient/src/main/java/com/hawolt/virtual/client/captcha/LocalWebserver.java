@@ -3,9 +3,7 @@ package com.hawolt.virtual.client.captcha;
 import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
 
-import java.awt.*;
 import java.io.IOException;
-import java.net.URI;
 
 /**
  * Created: 24/08/2023 17:58
@@ -43,6 +41,28 @@ public class LocalWebserver {
 
     public static void show(P1Callback callback) throws IOException {
         LocalWebserver.callback = callback;
-        Desktop.getDesktop().browse(URI.create("http://127.0.0.1:42069"));
+        browse("http://127.0.0.1:42069");
+    }
+
+    private static void browse(String url) throws IOException {
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("mac")) {
+            Runtime rt = Runtime.getRuntime();
+            rt.exec("open " + url);
+        } else if (os.contains("nix") || os.contains("nux")) {
+            Runtime rt = Runtime.getRuntime();
+            String[] browsers = {"google-chrome", "firefox", "mozilla", "epiphany", "konqueror", "netscape", "opera", "links", "lynx"};
+            StringBuilder command = new StringBuilder();
+            for (int i = 0; i < browsers.length; i++)
+                if (i == 0) {
+                    command.append(String.format("%s \"%s\"", browsers[i], url));
+                } else {
+                    command.append(String.format(" || %s \"%s\"", browsers[i], url));
+                }
+            rt.exec(new String[]{"sh", "-c", command.toString()});
+        } else {
+            Runtime rt = Runtime.getRuntime();
+            rt.exec("rundll32 url.dll,FileProtocolHandler " + url);
+        }
     }
 }
