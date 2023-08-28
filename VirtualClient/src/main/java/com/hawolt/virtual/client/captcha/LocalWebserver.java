@@ -1,5 +1,6 @@
 package com.hawolt.virtual.client.captcha;
 
+import com.hawolt.generic.util.Network;
 import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
 
@@ -41,18 +42,6 @@ public class LocalWebserver {
 
     public static void show(P1Callback callback) throws IOException {
         LocalWebserver.callback = callback;
-        browse("http://127.0.0.1:42069");
-    }
-
-    private static void browse(String url) throws IOException {
-        String os = System.getProperty("os.name").toLowerCase();
-        Runtime rt = Runtime.getRuntime();
-        if (os.contains("mac")) {
-            rt.exec("open " + url);
-        } else if (os.contains("nix") || os.contains("nux")) {
-            rt.exec(new String[]{"xdg-open", url});
-        } else {
-            rt.exec("rundll32 url.dll,FileProtocolHandler " + url);
-        }
+        Network.browse("http://127.0.0.1:42069");
     }
 }
