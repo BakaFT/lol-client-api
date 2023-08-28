@@ -120,13 +120,9 @@ public class LocalCookieSupplier implements ICookieSupplier {
     @Override
     public boolean isInCompletedState() {
         return map.containsKey("sub") && map.get("sub").isNotExpired()
-                //     && map.containsKey("tdid") && map.get("tdid").isNotExpired()
                 && map.containsKey("clid") && map.get("clid").isNotExpired()
                 && map.containsKey("csid") && map.get("csid").isNotExpired()
                 && map.containsKey("ssid") && map.get("ssid").isNotExpired();
-        //  && map.containsKey("__cflb") && map.get("__cflb").isNotExpired()
-        // && map.containsKey("__cf_bm") && map.get("__cf_bm").isNotExpired()
-        //&& map.containsKey("authenticator.sid") && map.get("authenticator.sid").isNotExpired();
     }
 
 }
