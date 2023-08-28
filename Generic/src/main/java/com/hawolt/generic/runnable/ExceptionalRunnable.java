@@ -21,6 +21,7 @@ public abstract class ExceptionalRunnable implements Runnable {
     public void run() {
         try {
             execute();
+            System.gc();
         } catch (Exception e) {
             if (callback != null) callback.onException(e);
         }
