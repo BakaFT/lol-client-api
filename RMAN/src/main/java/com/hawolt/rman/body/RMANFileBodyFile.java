@@ -1,7 +1,6 @@
 package com.hawolt.rman.body;
 
 import com.hawolt.rman.RMANFile;
-import com.hawolt.rman.util.Hex;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +23,7 @@ public class RMANFileBodyFile {
     private int languageId;
     private int unknown2;
     private int unknown3;
-    private List<String> chunkIds;
+    private List<Long> chunkIds;
 
 
     public String getFullFilepath(RMANFile manifest) {
@@ -135,16 +134,13 @@ public class RMANFileBodyFile {
         this.unknown3 = unknown3;
     }
 
-    public List<String> getChunkIds() {
+    public List<Long> getChunkIds() {
         return chunkIds;
     }
 
     public void setChunkIds(List<Long> chunkIds) {
-        List<String> stringChunkIds = new ArrayList<>();
-        for (Long chunkId : chunkIds) {
-            stringChunkIds.add(Hex.from(chunkId, 16));
-        }
-        this.chunkIds = stringChunkIds;
+        this.chunkIds = new ArrayList<>(chunkIds.size());
+        this.chunkIds.addAll(chunkIds);
     }
 
     @Override

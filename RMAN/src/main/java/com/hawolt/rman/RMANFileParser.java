@@ -4,7 +4,6 @@ import com.github.luben.zstd.Zstd;
 import com.hawolt.generic.util.RandomAccessReader;
 import com.hawolt.rman.body.*;
 import com.hawolt.rman.header.RMANFileHeader;
-import com.hawolt.rman.util.Hex;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -109,7 +108,7 @@ public class RMANFileParser {
         List<Map<String, Object>> unmappedBundles = RMANOffsetTable.parseOffsetTable(reader, RMANVTable.getBundleFields(), RMANVTable::parseVTable);
         for (Map<String, Object> entry : unmappedBundles) {
             RMANFileBodyBundle bundle = new RMANFileBodyBundle();
-            bundle.setBundleId(Hex.from((Long) entry.get("bundle_id"), 16));
+            bundle.setBundleId((Long) entry.get("bundle_id"));
             List<RMANFileBodyBundleChunk> chunks = new ArrayList<>();
             reader.seek((Integer) entry.get("chunks_offset"));
             List<Map<String, Object>> unmappedChunks = RMANOffsetTable.parseOffsetTable(reader, RMANVTable.getChunkFields(), RMANVTable::parseVTable);
@@ -117,7 +116,7 @@ public class RMANFileParser {
                 RMANFileBodyBundleChunk chunk = new RMANFileBodyBundleChunk();
                 chunk.setCompressedSize((Integer) chunkInfo.get("compressed_size"));
                 chunk.setUncompressedSize((Integer) chunkInfo.get("uncompressed_size"));
-                chunk.setChunkId(Hex.from((Long) chunkInfo.get("chunk_id"), 16));
+                chunk.setChunkId((Long) chunkInfo.get("chunk_id"));
                 chunks.add(chunk);
             }
             bundle.setChunks(chunks);

@@ -1,5 +1,7 @@
 package com.hawolt.rman.body;
 
+import com.hawolt.rman.util.Hex;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -10,7 +12,7 @@ import java.util.List;
 
 public class RMANFileBodyBundle {
     private int headerSize;
-    private String bundleId;
+    private long bundleId;
     private byte[] skipped;
     private List<RMANFileBodyBundleChunk> chunks;
 
@@ -22,11 +24,11 @@ public class RMANFileBodyBundle {
         this.headerSize = headerSize;
     }
 
-    public String getBundleId() {
+    public long getBundleId() {
         return bundleId;
     }
 
-    public void setBundleId(String bundleId) {
+    public void setBundleId(long bundleId) {
         this.bundleId = bundleId;
     }
 
@@ -50,7 +52,7 @@ public class RMANFileBodyBundle {
     public String toString() {
         return "RMANFileBodyBundle{" +
                 "headerSize=" + headerSize +
-                ", bundleId='" + bundleId + '\'' +
+                ", bundleId='" + Hex.from(bundleId, 16) + '\'' +
                 ", skipped=" + Arrays.toString(skipped) +
                 ", chunks=" + chunks +
                 '}';

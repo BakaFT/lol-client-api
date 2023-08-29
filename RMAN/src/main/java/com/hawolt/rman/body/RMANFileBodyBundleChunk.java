@@ -1,5 +1,7 @@
 package com.hawolt.rman.body;
 
+import com.hawolt.rman.util.Hex;
+
 /**
  * Created: 05/01/2023 12:37
  * Author: Twitter @hawolt
@@ -8,7 +10,7 @@ package com.hawolt.rman.body;
 public class RMANFileBodyBundleChunk {
     private int compressedSize;
     private int uncompressedSize;
-    private String chunkId;
+    private long chunkId;
 
     public int getCompressedSize() {
         return compressedSize;
@@ -26,11 +28,11 @@ public class RMANFileBodyBundleChunk {
         this.uncompressedSize = uncompressedSize;
     }
 
-    public String getChunkId() {
+    public long getChunkId() {
         return chunkId;
     }
 
-    public void setChunkId(String chunkId) {
+    public void setChunkId(long chunkId) {
         this.chunkId = chunkId;
     }
 
@@ -39,7 +41,7 @@ public class RMANFileBodyBundleChunk {
         return "RMANFileBodyBundleChunk{" +
                 "compressedSize=" + compressedSize +
                 ", uncompressedSize=" + uncompressedSize +
-                ", chunkId='" + chunkId + '\'' +
+                ", chunkId='" + Hex.from(chunkId, 16) + '\'' +
                 '}';
     }
 }

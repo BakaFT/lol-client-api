@@ -1,5 +1,7 @@
 package com.hawolt.rman.body;
 
+import com.hawolt.rman.util.Hex;
+
 /**
  * Created: 05/01/2023 13:40
  * Author: Twitter @hawolt
@@ -7,9 +9,9 @@ package com.hawolt.rman.body;
 
 public class RMANFileBodyBundleChunkInfo {
     private final int offsetToChunk, compressedSize;
-    private final String bundleId, chunkId;
+    private final long bundleId, chunkId;
 
-    public RMANFileBodyBundleChunkInfo(String bundleId, String chunkId, int offsetToChunk, int compressedSize) {
+    public RMANFileBodyBundleChunkInfo(long bundleId, long chunkId, int offsetToChunk, int compressedSize) {
         this.compressedSize = compressedSize;
         this.offsetToChunk = offsetToChunk;
         this.bundleId = bundleId;
@@ -24,11 +26,11 @@ public class RMANFileBodyBundleChunkInfo {
         return compressedSize;
     }
 
-    public String getBundleId() {
+    public long getBundleId() {
         return bundleId;
     }
 
-    public String getChunkId() {
+    public long getChunkId() {
         return chunkId;
     }
 
@@ -37,8 +39,8 @@ public class RMANFileBodyBundleChunkInfo {
         return "RMANFileBodyBundleChunkInfo{" +
                 "offsetToChunk=" + offsetToChunk +
                 ", compressedSize=" + compressedSize +
-                ", bundleId=" + bundleId +
-                ", chunkId=" + chunkId +
+                ", bundleId=" + Hex.from(bundleId, 16) +
+                ", chunkId=" + Hex.from(chunkId, 16) +
                 '}';
     }
 }

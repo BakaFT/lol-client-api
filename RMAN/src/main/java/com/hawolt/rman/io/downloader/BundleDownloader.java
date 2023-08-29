@@ -2,6 +2,7 @@ package com.hawolt.rman.io.downloader;
 
 import com.hawolt.manifest.ManifestType;
 import com.hawolt.rman.body.RMANFileBodyBundle;
+import com.hawolt.rman.util.Hex;
 
 import java.util.List;
 import java.util.Set;
@@ -19,7 +20,7 @@ public class BundleDownloader {
     }
 
     private static Bundle downloadBlocking(ManifestType type, RMANFileBodyBundle rmanFileBodyBundle) {
-        Bundle bundle = new Bundle(type.getBundleUrl(), String.join(".", rmanFileBodyBundle.getBundleId(), "bundle"));
+        Bundle bundle = new Bundle(type.getBundleUrl(), String.join(".", Hex.from(rmanFileBodyBundle.getBundleId(), 16), "bundle"));
         bundle.download();
         return bundle;
     }
