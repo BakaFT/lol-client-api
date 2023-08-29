@@ -7,7 +7,7 @@ package com.hawolt.generic.runnable;
 
 public abstract class ExceptionalRunnable implements Runnable {
 
-    private final IExceptionCallback callback;
+    protected final IExceptionCallback callback;
 
     public ExceptionalRunnable() {
         this(null);
@@ -21,7 +21,6 @@ public abstract class ExceptionalRunnable implements Runnable {
     public void run() {
         try {
             execute();
-            System.gc();
         } catch (Exception e) {
             if (callback != null) callback.onException(e);
         }

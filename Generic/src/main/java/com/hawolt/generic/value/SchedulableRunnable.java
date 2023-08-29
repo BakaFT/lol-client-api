@@ -7,7 +7,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 /**
  * Created: 12/01/2023 23:18
@@ -27,17 +26,18 @@ public abstract class SchedulableRunnable extends ExceptionalRunnable {
     }
 
     public void schedule(int initialDelay, int period, TimeUnit timeUnit) {
-        schedule(initialDelay, period, timeUnit, null, null);
+        schedule(initialDelay, period, timeUnit, null);
     }
 
-    public void schedule(int initialDelay, int period, TimeUnit timeUnit, Runnable post, Consumer<Exception> consumer) {
+
+    public void schedule(int initialDelay, int period, TimeUnit timeUnit, Runnable post) {
         this.service = Executors.newSingleThreadScheduledExecutor();
         this.future = service.scheduleAtFixedRate(() -> {
             try {
                 run();
                 if (post != null) post.run();
             } catch (Exception e) {
-                if (consumer != null) consumer.accept(e);
+                if (callback != null) callback.onException(e);
             }
         }, initialDelay, period, timeUnit);
     }
