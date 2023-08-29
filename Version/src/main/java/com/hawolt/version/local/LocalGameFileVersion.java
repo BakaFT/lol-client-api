@@ -58,7 +58,7 @@ public class LocalGameFileVersion extends PairedValueSupplier<String, String> im
                         String key = table.getString(i).getKey();
                         if (!"ProductVersion".contains(key)) continue;
                         if (PairedValueSupplier.debug) {
-                            Logger.debug("[cache] store: (k:{}, v:{})", rmanFileBodyFile.getName(), table.getString(i).getValue());
+                            Logger.debug("[cache] store: (o:{}, k:{}, v:{})", platform.name(), rmanFileBodyFile.getName(), table.getString(i).getValue());
                         }
                         put(rmanFileBodyFile.getName(), table.getString(i).getValue());
                     }
