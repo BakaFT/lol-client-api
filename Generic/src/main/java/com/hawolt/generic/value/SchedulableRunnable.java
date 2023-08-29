@@ -26,8 +26,15 @@ public abstract class SchedulableRunnable extends ExceptionalRunnable {
     }
 
     public void schedule(int initialDelay, int period, TimeUnit timeUnit) {
+        schedule(initialDelay, period, timeUnit, null);
+    }
+
+    public void schedule(int initialDelay, int period, TimeUnit timeUnit, Runnable onExecution) {
         this.service = Executors.newSingleThreadScheduledExecutor();
-        this.future = service.scheduleAtFixedRate(this, initialDelay, period, timeUnit);
+        this.future = service.scheduleAtFixedRate(() -> {
+            run();
+            if (onExecution != null) onExecution.run();
+        }, initialDelay, period, timeUnit);
     }
 
     public void shutdown() {
