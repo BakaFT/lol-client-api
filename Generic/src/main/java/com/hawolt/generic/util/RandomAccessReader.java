@@ -38,30 +38,30 @@ public class RandomAccessReader implements IBinaryReader {
 
     @Override
     public short readShort() {
-        byte[] copy = Arrays.copyOfRange(b, position, position + 2);
+        short ret = (short) ((b[position + 1] & 0xFF) << 8 | (b[position] & 0xFF));
         this.position += 2;
-        return (short) ((copy[1] & 0xFF) << 8 | (copy[0] & 0xFF));
+        return ret;
     }
 
     @Override
     public int readInt() {
-        byte[] copy = Arrays.copyOfRange(b, position, position + 4);
+        int ret = (b[position + 3] & 0xFF) << 24 | (b[position + 2] & 0xFF) << 16 | (b[position + 1] & 0xFF) << 8 | (b[position] & 0xFF);
         this.position += 4;
-        return copy[3] << 24 | (copy[2] & 0xFF) << 16 | (copy[1] & 0xFF) << 8 | (copy[0] & 0xFF);
+        return ret;
     }
 
     @Override
     public long readLong() {
-        byte[] copy = Arrays.copyOfRange(b, position, position + 8);
+        long ret = ((b[position + 7] & 0xFFL) << 56) |
+                ((b[position + 6] & 0xFFL) << 48) |
+                ((b[position + 5] & 0xFFL) << 40) |
+                ((b[position + 4] & 0xFFL) << 32) |
+                ((b[position + 3] & 0xFFL) << 24) |
+                ((b[position + 2] & 0xFFL) << 16) |
+                ((b[position + 1] & 0xFFL) << 8) |
+                ((b[position] & 0xFFL));
         this.position += 8;
-        return ((copy[7] & 0xFFL) << 56) |
-                ((copy[6] & 0xFFL) << 48) |
-                ((copy[5] & 0xFFL) << 40) |
-                ((copy[4] & 0xFFL) << 32) |
-                ((copy[3] & 0xFFL) << 24) |
-                ((copy[2] & 0xFFL) << 16) |
-                ((copy[1] & 0xFFL) << 8) |
-                ((copy[0] & 0xFFL));
+        return ret;
     }
 
     @Override
