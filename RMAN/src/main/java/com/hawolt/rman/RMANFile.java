@@ -1,16 +1,15 @@
 package com.hawolt.rman;
 
+import com.github.luben.zstd.ZstdInputStream;
+import com.hawolt.generic.util.RandomAccessReader;
 import com.hawolt.rman.body.*;
 import com.hawolt.rman.header.RMANFileHeader;
+import com.hawolt.rman.io.StreamReader;
 import com.hawolt.rman.io.downloader.BadBundleException;
 import com.hawolt.rman.io.downloader.Bundle;
 import com.hawolt.rman.util.Hex;
-import com.hawolt.rman.util.RMANStream;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +23,7 @@ import java.util.stream.Collectors;
  **/
 
 public class RMANFile {
+    public static boolean optimizeRamUsage;
     private final Map<Long, RMANFileBodyBundleChunkInfo> chunksById = new HashMap<>();
     private final Map<Long, RMANFileBodyBundle> bundlesById = new HashMap<>();
     private RMANFileHeader header;
@@ -51,6 +51,8 @@ public class RMANFile {
         return file.getChunkIds()
                 .stream()
                 .map(getChunkMap()::get)
+                .toList()
+                .stream()
                 .map(RMANFileBodyBundleChunkInfo::getBundleId)
                 .map(getBundleMap()::get)
                 .collect(Collectors.toSet());
@@ -60,15 +62,8 @@ public class RMANFile {
         List<Long> chunkIds = file.getChunkIds();
         try (OutputStream stream = outputStream) {
             for (long chunkId : chunkIds) {
-                int read;
-                byte[] bytes = new byte[8192];
-                try (RMANStream rmanStream = load(list, chunkId)) {
-                    while ((read = rmanStream.read(bytes)) != -1) {
-                        stream.write(bytes, 0, read);
-                    }
-                }
-                //TODO WRITE OWN ZSTD IMPLEMENTATION
-                System.gc();
+                stream.write(load(list, chunkId));
+                if (optimizeRamUsage) System.gc();
             }
         }
     }
@@ -83,12 +78,17 @@ public class RMANFile {
         handle(file, list, Files.newOutputStream(location.toPath()));
     }
 
-    private RMANStream load(List<Bundle> list, long chunkId) throws IOException {
+    private byte[] load(List<Bundle> list, Long chunkId) throws IOException {
         RMANFileBodyBundleChunkInfo current = chunksById.get(chunkId);
         String name = String.join(".", Hex.from(current.getBundleId(), 16), "bundle");
         List<Bundle> bundles = list.stream().filter(bundle -> bundle.getName().equals(name)).collect(Collectors.toList());
         if (bundles.size() != 1) throw new BadBundleException("Bad Bundle: " + name);
-        return new RMANStream(bundles.remove(0), current.getOffsetToChunk(), current.getCompressedSize());
+        Bundle bundle = bundles.remove(0);
+        RandomAccessReader reader = new RandomAccessReader(bundle.getBytes());
+        reader.seek(current.getOffsetToChunk());
+        byte[] compressedChunkData = reader.readBytes(current.getCompressedSize());
+        ZstdInputStream stream = new ZstdInputStream(new ByteArrayInputStream(compressedChunkData));
+        return StreamReader.from(stream);
     }
 
     public Map<Long, RMANFileBodyBundleChunkInfo> getChunkMap() {
