@@ -2,17 +2,14 @@ package com.hawolt.rman;
 
 import com.github.luben.zstd.Zstd;
 import com.hawolt.generic.util.RandomAccessReader;
+import com.hawolt.rman.RMANFile;
 import com.hawolt.rman.body.*;
 import com.hawolt.rman.header.RMANFileHeader;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-/**
- * Created: 01/01/2023 03:07
- * Author: Twitter @hawolt
- **/
 
 public class RMANFileParser {
 
@@ -31,7 +28,6 @@ public class RMANFileParser {
         file.buildBundleMap();
         return file;
     }
-
     private static RMANFileBody body(RMANFile file) {
         byte[] uncompressed = Zstd.decompress(file.getCompressedBody(), file.getHeader().getDecompressedLength());
         RandomAccessReader reader = new RandomAccessReader(uncompressed);
@@ -58,70 +54,220 @@ public class RMANFileParser {
         return body;
     }
 
+    public static String getString(RandomAccessReader reader, int startPos, short offset) {
+        if (offset == 0) {
+            return "";
+        } else {
+            int offsetPos = startPos + offset;
+            reader.seek(offsetPos);
+
+            int stringOffset = reader.readInt();
+            reader.seek(offsetPos + stringOffset);
+            return reader.readString(reader.readInt());
+        }
+    }
+
+    public static int get4(RandomAccessReader reader, int startPos, short offset) {
+        if (offset == 0) {
+            return 0;
+        } else {
+            int offsetPos = startPos + offset;
+            reader.seek(offsetPos);
+
+            return reader.readInt();
+        }
+    }
+
+    public static long get8(RandomAccessReader reader, int startPos, short offset) {
+        if (offset == 0) {
+            return 0L;
+        } else {
+            int offsetPos = startPos + offset;
+            reader.seek(offsetPos);
+
+            return reader.readLong();
+        }
+    }
+
+    public static int getOffset4(RandomAccessReader reader, int startPos, short offset) {
+        if (offset == 0) {
+            return 0;
+        } else {
+            int offsetPos = startPos + offset;
+            reader.seek(offsetPos);
+
+            return offsetPos + reader.readInt();
+        }
+    }
+    public static List<Long> getList8(RandomAccessReader reader, int startPos, short offset) {
+        if (offset == 0) {
+            return new ArrayList<>();
+        } else {
+            int offsetPos = startPos + offset;
+            reader.seek(offsetPos);
+
+            int listOffset = reader.readInt();
+            reader.seek(offsetPos + listOffset);
+            int size = reader.readInt();
+            List<Long> values = new ArrayList<>();
+            for (int j = 0; j < size; j++) {
+                values.add(reader.readLong());
+            }
+
+            return values;
+        }
+    }
+
+    public static short[] getVTableOffsets(RandomAccessReader reader, int startPos) {
+        int vTableOffset = startPos - reader.readInt();
+        reader.seek(vTableOffset);
+
+        short vtableSize = reader.readShort();
+        short vtableEntryCount = reader.readShort();
+        short[] vTableEntryOffsets = new short[vtableEntryCount];
+        for (int j = 0; j < vtableEntryCount; j++) {
+            vTableEntryOffsets[j] = reader.readShort();
+        }
+
+        return vTableEntryOffsets;
+    }
+
     private static List<RMANFileBodyFile> files(RandomAccessReader reader, RMANFileBodyHeader header) {
         List<RMANFileBodyFile> files = new ArrayList<>();
         reader.seek(header.getFileListOffset());
-        List<Map<String, Object>> unmappedDirectories = RMANOffsetTable.parseOffsetTable(reader, RMANVTable.getFileFields(), RMANVTable::parseVTable);
-        for (Map<String, Object> entry : unmappedDirectories) {
+
+        int count = reader.readInt();
+        for (int i = 0; i < count; i++) {
             RMANFileBodyFile file = new RMANFileBodyFile();
-            file.setFileId((Long) entry.get("file_id"));
-            file.setDirectoryId((Long) entry.get("directory_id"));
-            file.setFileSize((Integer) entry.get("file_size"));
-            file.setName((String) entry.get("name"));
-            file.setSymlink((String) entry.get("symlink"));
-            file.setChunkIds((List<Long>) entry.get("chunks"));
+
+            int current = reader.position();
+            int offset = reader.readInt();
+            reader.seek(current + offset);
+
+            int startPos = reader.position();
+            short[] vTableEntryOffsets = getVTableOffsets(reader, startPos);
+
+            file.setFileId(get8(reader, startPos, vTableEntryOffsets[0]));
+            file.setDirectoryId(get8(reader, startPos, vTableEntryOffsets[1]));
+            file.setFileSize(get4(reader, startPos, vTableEntryOffsets[2]));
+            file.setName(getString(reader, startPos, vTableEntryOffsets[3]));
+            // NOTE: languageId is int in the class def, but in the vtable schema
+            // it was marked as 8 (long). I read it as a long and cast it to int for now.
+            file.setLanguageId((int) get8(reader, startPos, vTableEntryOffsets[4]));
+            reader.seek(startPos + vTableEntryOffsets[5]);
+            reader.seek(startPos + vTableEntryOffsets[6]);
+            file.setChunkIds(getList8(reader, startPos, vTableEntryOffsets[7]));
+            reader.seek(startPos + vTableEntryOffsets[8]);
+            file.setSymlink(getString(reader, startPos, vTableEntryOffsets[9]));
+            reader.seek(startPos + vTableEntryOffsets[10]);
+            reader.seek(startPos + vTableEntryOffsets[11]);
+            reader.seek(startPos + vTableEntryOffsets[12]);
+
             files.add(file);
+
+            reader.seek(current + 4);
         }
+
         return files;
     }
 
     private static List<RMANFileBodyDirectory> directories(RandomAccessReader reader, RMANFileBodyHeader header) {
         List<RMANFileBodyDirectory> directories = new ArrayList<>();
         reader.seek(header.getFolderListOffset());
-        List<Map<String, Object>> unmappedDirectories = RMANOffsetTable.parseOffsetTable(reader, RMANVTable.getDirectoryFields(), RMANVTable::parseVTable);
-        for (Map<String, Object> entry : unmappedDirectories) {
+
+        int count = reader.readInt();
+        for (int i = 0; i < count; i++) {
             RMANFileBodyDirectory dir = new RMANFileBodyDirectory();
-            dir.setDirectoryId((Long) entry.get("directory_id"));
-            dir.setParentId((Long) entry.get("parent_id"));
-            dir.setName((String) entry.get("name"));
+
+            int current = reader.position();
+            int offset = reader.readInt();
+            reader.seek(current + offset);
+
+            int startPos = reader.position();
+            short[] vTableEntryOffsets = getVTableOffsets(reader, startPos);
+
+            dir.setDirectoryId(get8(reader, startPos, vTableEntryOffsets[0]));
+            dir.setParentId(get8(reader, startPos, vTableEntryOffsets[1]));
+            dir.setName(getString(reader, startPos, vTableEntryOffsets[2]));
+
             directories.add(dir);
+
+            reader.seek(current + 4);
         }
+
         return directories;
     }
-
     private static List<RMANFileBodyLanguage> languages(RandomAccessReader reader, RMANFileBodyHeader header) {
         List<RMANFileBodyLanguage> languages = new ArrayList<>();
         reader.seek(header.getLanguageListOffset());
-        List<Map<String, Object>> unmappedLanguages = RMANOffsetTable.parseOffsetTable(reader, RMANVTable.getLanguageFields(), RMANVTable::parseVTable);
-        for (Map<String, Object> entry : unmappedLanguages) {
-            RMANFileBodyLanguage dir = new RMANFileBodyLanguage();
-            dir.setId((Integer) entry.get("language_id"));
-            dir.setName((String) entry.get("name"));
-            languages.add(dir);
+
+        int count = reader.readInt();
+        for (int i = 0; i < count; i++) {
+            RMANFileBodyLanguage language = new RMANFileBodyLanguage();
+
+            int current = reader.position();
+            int offset = reader.readInt();
+            reader.seek(current + offset);
+
+            int startPos = reader.position();
+            short[] vTableEntryOffsets = getVTableOffsets(reader, startPos);
+
+            language.setId(get4(reader, startPos, vTableEntryOffsets[0]));
+            language.setName(getString(reader, startPos, vTableEntryOffsets[1]));
+
+            languages.add(language);
+
+            reader.seek(current + 4);
         }
+
         return languages;
     }
 
     private static List<RMANFileBodyBundle> bundle(RandomAccessReader reader, RMANFileBodyHeader header) {
         List<RMANFileBodyBundle> bundles = new ArrayList<>();
         reader.seek(header.getBundleListOffset());
-        List<Map<String, Object>> unmappedBundles = RMANOffsetTable.parseOffsetTable(reader, RMANVTable.getBundleFields(), RMANVTable::parseVTable);
-        for (Map<String, Object> entry : unmappedBundles) {
+
+        int count = reader.readInt();
+        for (int i = 0; i < count; i++) {
             RMANFileBodyBundle bundle = new RMANFileBodyBundle();
-            bundle.setBundleId((Long) entry.get("bundle_id"));
+
+            int current = reader.position();
+            int offset = reader.readInt();
+            reader.seek(current + offset);
+
+            int startPos = reader.position();
+            short[] vTableEntryOffsets = getVTableOffsets(reader, startPos);
+
+            bundle.setBundleId(get8(reader, startPos, vTableEntryOffsets[0]));
+            int chunks_offset = getOffset4(reader, startPos, vTableEntryOffsets[1]);
+            reader.seek(chunks_offset);
+
             List<RMANFileBodyBundleChunk> chunks = new ArrayList<>();
-            reader.seek((Integer) entry.get("chunks_offset"));
-            List<Map<String, Object>> unmappedChunks = RMANOffsetTable.parseOffsetTable(reader, RMANVTable.getChunkFields(), RMANVTable::parseVTable);
-            for (Map<String, Object> chunkInfo : unmappedChunks) {
+            int chunk_count = reader.readInt();
+            for (int j = 0; j < chunk_count; j++) {
+                int chunkCurrent = reader.position();
+                int chunkOffset = reader.readInt();
+                reader.seek(chunkCurrent + chunkOffset);
+
+                int chunkStartPos = reader.position();
+                short[] chunkVTableEntryOffsets = getVTableOffsets(reader, chunkStartPos);
+
                 RMANFileBodyBundleChunk chunk = new RMANFileBodyBundleChunk();
-                chunk.setCompressedSize((Integer) chunkInfo.get("compressed_size"));
-                chunk.setUncompressedSize((Integer) chunkInfo.get("uncompressed_size"));
-                chunk.setChunkId((Long) chunkInfo.get("chunk_id"));
+                chunk.setChunkId(get8(reader, chunkStartPos, chunkVTableEntryOffsets[0]));
+                chunk.setCompressedSize(get4(reader, chunkStartPos, chunkVTableEntryOffsets[1]));
+                chunk.setUncompressedSize(get4(reader, chunkStartPos, chunkVTableEntryOffsets[2]));
+
                 chunks.add(chunk);
+
+                reader.seek(chunkCurrent + 4);
             }
+
             bundle.setChunks(chunks);
             bundles.add(bundle);
+
+            reader.seek(current + 4);
         }
+
         return bundles;
     }
 
@@ -139,4 +285,3 @@ public class RMANFileParser {
         return header;
     }
 }
-;
