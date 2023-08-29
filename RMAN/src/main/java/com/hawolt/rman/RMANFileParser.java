@@ -2,14 +2,11 @@ package com.hawolt.rman;
 
 import com.github.luben.zstd.Zstd;
 import com.hawolt.generic.util.RandomAccessReader;
-import com.hawolt.rman.RMANFile;
 import com.hawolt.rman.body.*;
 import com.hawolt.rman.header.RMANFileHeader;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 public class RMANFileParser {
 
@@ -28,6 +25,7 @@ public class RMANFileParser {
         file.buildBundleMap();
         return file;
     }
+
     private static RMANFileBody body(RMANFile file) {
         byte[] uncompressed = Zstd.decompress(file.getCompressedBody(), file.getHeader().getDecompressedLength());
         RandomAccessReader reader = new RandomAccessReader(uncompressed);
@@ -99,6 +97,7 @@ public class RMANFileParser {
             return offsetPos + reader.readInt();
         }
     }
+
     public static List<Long> getList8(RandomAccessReader reader, int startPos, short offset) {
         if (offset == 0) {
             return new ArrayList<>();
@@ -197,6 +196,7 @@ public class RMANFileParser {
 
         return directories;
     }
+
     private static List<RMANFileBodyLanguage> languages(RandomAccessReader reader, RMANFileBodyHeader header) {
         List<RMANFileBodyLanguage> languages = new ArrayList<>();
         reader.seek(header.getLanguageListOffset());
