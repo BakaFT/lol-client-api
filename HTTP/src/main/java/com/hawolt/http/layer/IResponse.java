@@ -30,7 +30,7 @@ public interface IResponse {
         Map<String, List<String>> responseHeaders = response.headers();
         translateHeaders(builder, responseHeaders);
         boolean isNotAnImage = response.headers().containsKey("content-type") && response.headers().get("content-type").stream().anyMatch(o -> !o.startsWith("image"));
-        if (isNotAnImage) translateBody(builder, response.request());
+        if (isNotAnImage) translateBody(builder, response.response());
         return builder.toString();
     }
 
