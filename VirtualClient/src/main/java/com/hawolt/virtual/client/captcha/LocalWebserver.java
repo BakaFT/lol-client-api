@@ -12,12 +12,14 @@ import java.io.IOException;
  **/
 
 public class LocalWebserver {
-    private static P1Callback callback;
-    public static Javalin instance;
-    private static String rqData;
+    private P1Callback callback;
+    public Javalin instance;
+    private String rqData;
+    private final int port;
 
-    static {
-        LocalWebserver.instance =
+    public LocalWebserver(int port) {
+        this.port = port;
+        this.instance =
                 Javalin.create(config -> config.staticFiles.add("/html", Location.CLASSPATH))
                         .post("/v1/hcaptcha/response", context -> {
                             if (context.body().isEmpty() || !context.body().startsWith("P1")) {
@@ -33,15 +35,15 @@ public class LocalWebserver {
                         .before("/v1/*", context -> {
                             context.header("Access-Control-Allow-Origin", "*");
                         })
-                        .start(42069);
+                        .start(port);
     }
 
-    public static void setRqData(String rqData) {
-        LocalWebserver.rqData = rqData;
+    public void setRqData(String rqData) {
+        this.rqData = rqData;
     }
 
-    public static void show(P1Callback callback) throws IOException {
-        LocalWebserver.callback = callback;
-        Network.browse("http://127.0.0.1:42069");
+    public void show(P1Callback callback) throws IOException {
+        this.callback = callback;
+        Network.browse(String.format("http://127.0.0.1:%s", port));
     }
 }

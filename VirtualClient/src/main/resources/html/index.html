@@ -1,9 +1,10 @@
 <html lang="en">
 <head>
     <title>Solve hCaptcha</title>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8"/>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
         body {
             font-family: Roboto, Courier, monospace;
             margin: 0;
@@ -15,9 +16,11 @@
             justify-content: center;
             gap: 30px;
         }
+
         h1 {
             color: #F9FAF8;
         }
+
         button {
             background-color: #006400;
             color: #F9FAF8;
@@ -30,17 +33,21 @@
             transition: background-color 0.2s ease;
             margin-top: 30px;
         }
+
         button:hover {
             background-color: #183D3D;
         }
+
         .h-captcha {
             min-height: 94px; /* min height of hcaptcha iframe (64px) + margin (30px), so it wouldn't "jump"*/
         }
     </style>
     <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
     <script>
+        const host = window.location;
         window.onload = function () {
-            fetch('http://localhost:42069/v1/hcaptcha/rqdata')
+            let url = host + "v1/hcaptcha/rqdata";
+            fetch(url)
                 .then((response) => response.text())
                 .then((data) => {
                     hcaptcha.setData('', {rqdata: data})
@@ -57,7 +64,8 @@
         }
 
         function submitToBackend(token) {
-            fetch("http://localhost:42069/v1/hcaptcha/response", {
+            let url = host + "v1/hcaptcha/response";
+            fetch(url, {
                 method: "POST",
                 body: token,
             })

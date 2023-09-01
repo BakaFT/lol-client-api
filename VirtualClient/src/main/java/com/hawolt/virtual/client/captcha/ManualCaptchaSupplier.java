@@ -1,9 +1,11 @@
 package com.hawolt.virtual.client.captcha;
 
 import com.hawolt.exception.CaptchaException;
+import com.hawolt.logger.Logger;
 import com.hawolt.virtual.riotclient.instance.CaptchaSupplier;
 
 import java.io.IOException;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -12,13 +14,19 @@ import java.util.concurrent.TimeUnit;
  **/
 
 public class ManualCaptchaSupplier extends CaptchaSupplier implements P1Callback {
+    private static final Random random = new Random();
+    private final LocalWebserver webserver;
 
     private String p1Token;
 
+    public ManualCaptchaSupplier() {
+        this.webserver = new LocalWebserver(random.nextInt(10000) + 50000);
+    }
+
     @Override
     public String solve(String userAgent, String rqData) throws IOException, CaptchaException, InterruptedException {
-        LocalWebserver.setRqData(rqData);
-        LocalWebserver.show(this);
+        this.webserver.setRqData(rqData);
+        this.webserver.show(this);
         return waitForP1Token(System.currentTimeMillis());
     }
 
@@ -29,6 +37,8 @@ public class ManualCaptchaSupplier extends CaptchaSupplier implements P1Callback
                 throw new CaptchaException("RQData is no longer valid");
             }
         } while (p1Token == null);
+        Logger.debug("shutting down local captcha file host");
+        this.webserver.instance.stop();
         return p1Token;
     }
 
