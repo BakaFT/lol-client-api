@@ -145,7 +145,7 @@ public class AbstractVirtualRiotClientInstance implements IVirtualRiotClientInst
     private JSONObject getMultifactor(String code) {
         JSONObject object = new JSONObject();
         object.put("action", JSONObject.NULL);
-        object.put("code", code);
+        object.put("otp", code);
         object.put("rememberDevice", false);
         return object;
     }
