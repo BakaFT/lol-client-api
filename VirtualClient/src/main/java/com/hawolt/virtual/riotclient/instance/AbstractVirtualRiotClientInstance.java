@@ -98,14 +98,24 @@ public class AbstractVirtualRiotClientInstance implements IVirtualRiotClientInst
                 .build();
         IResponse response = cookieSupplier.handle(OkHttp3Client.execute(request, gateway));
         JSONObject object = new JSONObject(response.asString());
-        if (!object.has("type") || object.isNull("type")) {
-            throw new RiotClientException(RiotClientExceptionType.UNKNOWN_RESPONSE);
+        if (object.has("error")) {
+            if (object.isNull("error")) {
+                throw new RiotClientException(RiotClientExceptionType.ERROR_TYPE_IS_NULL);
+            } else {
+                switch (object.getString("error")) {
+                    case "auth_failure" -> throw new RiotClientException(RiotClientExceptionType.AUTH_FAILURE);
+                    case "rate_limited" -> throw new RiotClientException(RiotClientExceptionType.RATE_LIMITED);
+                    default -> throw new RiotClientException(RiotClientExceptionType.UNKNOWN);
+                }
+            }
+        } else if (!object.has("type") || object.isNull("type")) {
+            throw new RiotClientException(RiotClientExceptionType.MISSING_TYPE);
         } else if (object.getString("type").equals("multifactor")) {
             response = cookieSupplier.handle(submit2FA(multifactor.get(username, password)));
         }
         JSONObject status = new JSONObject(response.asString());
         if (!status.has("success") || status.isNull("success")) {
-            throw new RiotClientException(RiotClientExceptionType.UNKNOWN_RESPONSE);
+            throw new RiotClientException(RiotClientExceptionType.CAPTCHA_NOT_SUCCESSFUL);
         } else {
             return response;
         }
