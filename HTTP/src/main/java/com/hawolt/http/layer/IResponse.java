@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
  **/
 
 public interface IResponse {
-    Pattern JWT_PATTERN = Pattern.compile("(ey(.*?))\\.([A-z0-9]+)\\.([A-z0-9-.]+)");
+    Pattern JWT_PATTERN = Pattern.compile("(eyJ(.*?))\\.([A-z0-9]+)\\.([A-z0-9-.]+)");
     String DEFAULT = "${REDACTED_USER_CRITICAL_VALUE}";
 
     static String translate(IResponse response) {
