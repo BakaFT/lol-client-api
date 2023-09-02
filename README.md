@@ -53,22 +53,26 @@ import java.util.concurrent.CompletableFuture;
 
 public class Preset {
     public static void main(String[] args) {
+        RMANCache.preload();
         LocalCookieSupplier localCookieSupplier = new LocalCookieSupplier();
         VirtualRiotClientInstance virtualRiotClientInstance = VirtualRiotClientInstance.create(localCookieSupplier);
         try {
-            VirtualRiotClient virtualRiotClient = virtualRiotClientInstance.login(args[0], args[1], MultiFactorSupplier.blank);
+            VirtualRiotClient virtualRiotClient = virtualRiotClientInstance.login(
+                    args[0],
+                    args[1],
+                    MultiFactorSupplier.blank,
+                    new ManualCaptchaSupplier()
+            );
             VirtualLeagueClientInstance virtualLeagueClientInstance = virtualRiotClient.createVirtualLeagueClientInstance();
-            CompletableFuture<VirtualLeagueClient> virtualLeagueClientFuture = virtualLeagueClientInstance.login(false, true, true, false);
+            CompletableFuture<VirtualLeagueClient> virtualLeagueClientFuture = virtualLeagueClientInstance.login(true, true, true, false);
             virtualLeagueClientFuture.whenComplete(((virtualLeagueClient, throwable) -> {
-                if (throwable != null) throwable.printStackTrace();
+                if (throwable != null) Logger.error(throwable);
                 else {
                     Logger.info("Client setup complete");
                 }
             }));
-        } catch (IOException e) {
+        } catch (Exception e) {
             Logger.error(e);
-        } catch (LeagueException e) {
-            throw new RuntimeException(e);
         }
     }
 }
