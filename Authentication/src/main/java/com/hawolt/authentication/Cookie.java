@@ -1,5 +1,6 @@
 package com.hawolt.authentication;
 
+import com.hawolt.logger.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -70,6 +71,9 @@ public class Cookie {
             return System.currentTimeMillis() < date.toInstant().toEpochMilli();
         } catch (ParseException e) {
             return false;
+        } catch (NumberFormatException e) {
+            Logger.warn("Failed to parse Cookie expires value: '{}', defaulting to true", map.get("expires"));
+            return true;
         }
     }
 
