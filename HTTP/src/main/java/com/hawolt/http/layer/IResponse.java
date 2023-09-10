@@ -2,6 +2,7 @@ package com.hawolt.http.layer;
 
 import com.hawolt.http.integrity.Diffuser;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -35,7 +36,7 @@ public interface IResponse {
     }
 
     static void translateBody(StringBuilder builder, byte[] b) {
-        String body = new String(b);
+        String body = new String(b, StandardCharsets.UTF_8);
         if (!Diffuser.PRIVACY_ENHANCEMENT) builder.append(body);
         else {
             String logSafeString = Diffuser.vaporize(body);

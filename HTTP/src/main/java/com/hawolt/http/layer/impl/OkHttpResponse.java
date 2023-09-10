@@ -12,6 +12,7 @@ import okio.Okio;
 import okio.Pipe;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -68,7 +69,7 @@ public class OkHttpResponse implements IResponse {
 
     @Override
     public String asString() {
-        return new String(responseBody);
+        return new String(responseBody, StandardCharsets.UTF_8);
     }
 
     @Override
