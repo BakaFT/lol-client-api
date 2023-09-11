@@ -20,7 +20,16 @@ public class ManualCaptchaSupplier extends CaptchaSupplier implements P1Callback
     private String p1Token;
 
     public ManualCaptchaSupplier() {
-        this.webserver = new LocalWebserver(random.nextInt(10000) + 50000);
+        this.webserver = new LocalWebserver();
+        int port;
+        do {
+            port = 50000 + random.nextInt(10000);
+            try {
+                webserver.start(port);
+            } catch (Exception e) {
+                Logger.warn("Unable to start Server on port {}, trying another...", port);
+            }
+        } while (!webserver.isRunning());
     }
 
     @Override
