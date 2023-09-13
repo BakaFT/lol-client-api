@@ -16,7 +16,6 @@ public class LocalWebserver {
     private P1Callback callback;
     public Javalin instance;
     private String rqData;
-    private int port;
 
     public LocalWebserver() {
         this.instance = Javalin.create(config -> config.staticFiles.add("/html", Location.CLASSPATH))
@@ -43,15 +42,15 @@ public class LocalWebserver {
     }
 
     public void start(int port) {
-        this.instance.start(this.port = port);
+        this.instance.start(port);
     }
 
     public void setRqData(String rqData) {
         this.rqData = rqData;
     }
 
-    public void show(P1Callback callback) throws IOException {
+    public void show(P1Callback callback) throws IOException, InterruptedException {
         this.callback = callback;
-        Network.browse(String.format("http://127.0.0.1:%s", port));
+        Network.browse(String.format("http://127.0.0.1:%s", callback.getDestinationPort()));
     }
 }

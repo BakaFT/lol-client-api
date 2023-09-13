@@ -18,10 +18,10 @@ public class ManualCaptchaSupplier extends CaptchaSupplier implements P1Callback
     private final LocalWebserver webserver;
 
     private String p1Token;
+    private int port;
 
     public ManualCaptchaSupplier() {
         this.webserver = new LocalWebserver();
-        int port;
         do {
             port = 50000 + random.nextInt(10000);
             try {
@@ -54,5 +54,13 @@ public class ManualCaptchaSupplier extends CaptchaSupplier implements P1Callback
     @Override
     public void onP1Token(String token) {
         this.p1Token = token;
+    }
+
+    @Override
+    public int getDestinationPort() throws InterruptedException {
+        while (port == 0) {
+            Thread.sleep(200L);
+        }
+        return port;
     }
 }

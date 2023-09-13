@@ -7,4 +7,6 @@ package com.hawolt.virtual.client.captcha;
 
 public interface P1Callback {
     void onP1Token(String token);
+
+    int getDestinationPort() throws InterruptedException;
 }
