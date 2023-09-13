@@ -3,6 +3,7 @@ package com.hawolt.virtual.client.captcha;
 import com.hawolt.exception.CaptchaException;
 import com.hawolt.logger.Logger;
 import com.hawolt.virtual.riotclient.instance.CaptchaSupplier;
+import io.javalin.util.JavalinBindException;
 
 import java.io.IOException;
 import java.util.Random;
@@ -16,18 +17,16 @@ import java.util.concurrent.TimeUnit;
 public class ManualCaptchaSupplier extends CaptchaSupplier implements P1Callback {
     private static final Random random = new Random();
     private final LocalWebserver webserver;
-
     private String p1Token;
     private int port;
 
     public ManualCaptchaSupplier() {
         this.webserver = new LocalWebserver();
         do {
-            port = 50000 + random.nextInt(10000);
             try {
-                webserver.start(port);
-            } catch (Exception e) {
-                Logger.warn("Unable to start Server on port {}, trying another...", port);
+                webserver.start(port = 50000 + random.nextInt(10000));
+            } catch (JavalinBindException e) {
+                Logger.error(e.getMessage());
             }
         } while (!webserver.isRunning());
     }
@@ -58,7 +57,7 @@ public class ManualCaptchaSupplier extends CaptchaSupplier implements P1Callback
 
     @Override
     public int getDestinationPort() throws InterruptedException {
-        while (port == 0) {
+        while (!webserver.isRunning()) {
             Thread.sleep(200L);
         }
         return port;
