@@ -103,6 +103,7 @@ public class AbstractVirtualRiotClientInstance implements IVirtualRiotClientInst
                 throw new RiotClientException(RiotClientExceptionType.ERROR_TYPE_IS_NULL);
             } else {
                 switch (object.getString("error")) {
+                    case "captcha_not_allowed" -> throw new RiotClientException(RiotClientExceptionType.CAPTCHA_DENIED);
                     case "auth_failure" -> throw new RiotClientException(RiotClientExceptionType.AUTH_FAILURE);
                     case "rate_limited" -> throw new RiotClientException(RiotClientExceptionType.RATE_LIMITED);
                     default -> throw new RiotClientException(RiotClientExceptionType.UNKNOWN);
