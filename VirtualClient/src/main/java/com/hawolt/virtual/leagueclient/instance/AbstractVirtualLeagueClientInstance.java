@@ -1,11 +1,13 @@
 package com.hawolt.virtual.leagueclient.instance;
 
 import com.hawolt.authentication.*;
+import com.hawolt.generic.Constant;
 import com.hawolt.generic.data.Platform;
 import com.hawolt.generic.data.QueryTokenParser;
 import com.hawolt.generic.stage.IStageCallback;
 import com.hawolt.generic.stage.StageAwareObject;
 import com.hawolt.generic.token.impl.StringTokenSupplier;
+import com.hawolt.http.OkHttp3Client;
 import com.hawolt.http.auth.Gateway;
 import com.hawolt.http.layer.IResponse;
 import com.hawolt.logger.Logger;
@@ -19,11 +21,15 @@ import com.hawolt.virtual.leagueclient.client.Authentication;
 import com.hawolt.virtual.leagueclient.client.VirtualLeagueClient;
 import com.hawolt.virtual.leagueclient.exception.LeagueException;
 import com.hawolt.virtual.leagueclient.userinfo.UserInformation;
+import com.hawolt.virtual.leagueclient.userinfo.child.UserInformationLeagueAccount;
 import com.hawolt.virtual.refresh.*;
 import com.hawolt.virtual.riotclient.client.IVirtualRiotClient;
 import com.hawolt.virtual.riotclient.instance.IVirtualRiotClientInstance;
 import com.hawolt.yaml.IYamlSupplier;
 import com.hawolt.yaml.impl.YamlSupplier;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -57,14 +63,42 @@ public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClient
         this.virtualRiotClient = virtualRiotClient;
     }
 
-    private void checkSummonerState(UserInformation userInformation, boolean ignoreSummoner) throws LeagueException {
-        if (!ignoreSummoner && !userInformation.isLeagueAccountAssociated()) {
-            throw new LeagueException(LeagueException.ErrorType.NO_SUMMONER_NAME);
+    private IResponse setInitialPlatform(Platform platform) throws IOException {
+        JSONObject base = new JSONObject().put("region", platform.name());
+        RequestBody body = RequestBody.create(base.toString(), Constant.APPLICATION_JSON);
+        Request request = new Request.Builder()
+                .url("https://api.account.riotgames.com/regions/v1/initial")
+                .addHeader(
+                        "Authorization",
+                        String.format(
+                                "Bearer %s",
+                                virtualLeagueClientInstance.getRiotClientTokenSupplier().getSimple("access_token")
+                        )
+                )
+                .addHeader("User-Agent", virtualLeagueClientInstance.getRiotClientUserAgent("player-account"))
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Accept", "application/json")
+                .post(body)
+                .build();
+        return OkHttp3Client.execute(request, virtualLeagueClientInstance.getGateway());
+    }
+
+    private void checkSummonerState(UserInformation userInformation) throws LeagueException, IOException {
+        if (!userInformation.isLeagueAccountAssociated()) {
+            IResponse response = setInitialPlatform(virtualRiotClient.getInitialPlatformCallback().getInitialPlatform());
+            if (response.code() != 200) throw new LeagueException(LeagueException.ErrorType.FAILED_TO_INITIALIZE);
+            JSONObject content = new JSONObject(response.asString());
+            if (!content.has("success") || !content.getBoolean("success")) {
+                throw new LeagueException(LeagueException.ErrorType.UNSUCCESSFUL_INITIALIZATION);
+            }
+            userInformation.setUserInformationLeagueRegion(content);
         }
     }
 
-    private void configure(UserInformation userInformation) {
-        this.platformId = userInformation.getUserInformationLeague().getCPID();
+    private void configure(UserInformation userInformation) throws LeagueException {
+        this.platformId = userInformation.getUserInformationLeague().orElseThrow(
+                () -> new LeagueException(LeagueException.ErrorType.BAD_USERINFORMATION)
+        ).getCPID();
         this.platform = Platform.valueOf(platformId);
         this.localGameFileVersion = new LocalGameFileVersion(platform, Collections.singletonList("League of Legends.exe"));
         this.yamlSupplier = new YamlSupplier(platform);
@@ -166,9 +200,9 @@ public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClient
                 .setScopes(ClientScope.OPENID, ClientScope.LINK, ClientScope.BAN, ClientScope.LOL_REGION, ClientScope.ACCOUNT);
     }
 
-    public CompletableFuture<VirtualLeagueClient> login(boolean ignoreSummoner, boolean selfRefresh, boolean complete, boolean minimal) throws LeagueException {
+    public CompletableFuture<VirtualLeagueClient> login(boolean ignoreSummoner, boolean selfRefresh, boolean complete, boolean minimal) throws LeagueException, IOException {
         UserInformation userInformation = virtualRiotClient.getClearUserinformation();
-        this.checkSummonerState(userInformation, ignoreSummoner);
+        this.checkSummonerState(userInformation);
         this.configure(userInformation);
 
 
@@ -237,6 +271,19 @@ public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClient
                 Session session = new Session(cookieSupplier, publicClientConfig, userInformation);
                 session.authenticate(gateway, getLeagueClientUserAgent("rcp-be-lol-league-session"), loginQueue);
                 virtualLeagueClient.setAuthentication(Authentication.SESSION, session);
+
+                boolean nameless = userInformation.getUserInformationLeagueAccount().isEmpty();
+                if (!ignoreSummoner) {
+                    if (userInformation.getUserInformationLeagueAccount().isPresent()) {
+                        UserInformationLeagueAccount account = userInformation.getUserInformationLeagueAccount().get();
+                        nameless = account.getSummonerName().isEmpty();
+                    }
+                    if (nameless) {
+                        String name = virtualRiotClient.getInitialNameCallback().getInitialName();
+                        userInformation.setUserInformationLeagueAccount(name);
+                    }
+                }
+
                 RefreshTask task = new RefreshTask(
                         session,
                         gateway,

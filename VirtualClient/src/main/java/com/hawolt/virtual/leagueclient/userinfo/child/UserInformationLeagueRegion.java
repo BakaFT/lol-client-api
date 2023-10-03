@@ -4,6 +4,7 @@ import org.json.JSONArray;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created: 10/01/2023 22:08
@@ -17,6 +18,10 @@ public class UserInformationLeagueRegion {
         for (int i = 0; i < array.length(); i++) {
             list.add(new UserInformationLeagueRegionAccount(array.getJSONObject(i)));
         }
+    }
+
+    public Optional<UserInformationLeagueRegionAccount> getActiveAccount() {
+        return list.stream().filter(UserInformationLeagueRegionAccount::isActive).findAny();
     }
 
     public List<UserInformationLeagueRegionAccount> getList() {

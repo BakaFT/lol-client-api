@@ -2,9 +2,10 @@ package com.hawolt.virtual.riotclient.client;
 
 import com.hawolt.generic.token.impl.StringTokenSupplier;
 import com.hawolt.logger.Logger;
+import com.hawolt.virtual.client.InitialNameCallback;
+import com.hawolt.virtual.client.InitialPlatformCallback;
 import com.hawolt.virtual.leagueclient.authentication.impl.Entitlement;
 import com.hawolt.virtual.leagueclient.authentication.impl.Userinfo;
-import com.hawolt.virtual.leagueclient.exception.LeagueException;
 import com.hawolt.virtual.leagueclient.instance.VirtualLeagueClientInstance;
 import com.hawolt.virtual.leagueclient.userinfo.UserInformation;
 import com.hawolt.virtual.refresh.ExceptionalRefreshable;
@@ -28,7 +29,9 @@ import java.util.List;
  **/
 
 public class VirtualRiotClient implements IVirtualRiotClient, IRefreshable {
+    private final InitialPlatformCallback platformCallback;
     private final IVirtualRiotClientInstance instance;
+    private final InitialNameCallback nameCallback;
     private final MultiFactorSupplier multifactor;
     private final CaptchaSupplier captchaSupplier;
     private final String username, password;
@@ -40,13 +43,29 @@ public class VirtualRiotClient implements IVirtualRiotClient, IRefreshable {
 
     private Entitlement entitlement;
 
-    public VirtualRiotClient(IVirtualRiotClientInstance instance, String username, String password, MultiFactorSupplier multifactor, CaptchaSupplier captchaSupplier) {
+    public VirtualRiotClient(
+            IVirtualRiotClientInstance instance,
+            String username,
+            String password,
+            MultiFactorSupplier multifactor,
+            CaptchaSupplier captchaSupplier,
+            InitialPlatformCallback platformCallback,
+            InitialNameCallback nameCallback
+    ) {
         this.riotClientSupplier = instance.getRiotClientTokenSupplier();
+        this.platformCallback = platformCallback;
         this.captchaSupplier = captchaSupplier;
+        this.nameCallback = nameCallback;
         this.multifactor = multifactor;
         this.username = username;
         this.password = password;
         this.instance = instance;
+    }
+
+
+    @Override
+    public InitialPlatformCallback getInitialPlatformCallback() {
+        return platformCallback;
     }
 
     @Override
@@ -102,6 +121,11 @@ public class VirtualRiotClient implements IVirtualRiotClient, IRefreshable {
     @Override
     public MultiFactorSupplier getMultifactorSupplier() {
         return multifactor;
+    }
+
+    @Override
+    public InitialNameCallback getInitialNameCallback() {
+        return nameCallback;
     }
 
     @Override

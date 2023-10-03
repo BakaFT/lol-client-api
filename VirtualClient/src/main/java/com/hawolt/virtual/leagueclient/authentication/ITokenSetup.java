@@ -2,6 +2,7 @@ package com.hawolt.virtual.leagueclient.authentication;
 
 import com.hawolt.generic.token.impl.StringTokenSupplier;
 import com.hawolt.http.auth.Gateway;
+import com.hawolt.virtual.leagueclient.exception.LeagueException;
 
 import java.io.IOException;
 
@@ -11,5 +12,5 @@ import java.io.IOException;
  **/
 
 public interface ITokenSetup {
-    void authenticate(Gateway gateway, String userAgent, StringTokenSupplier tokenSupplier) throws IOException;
+    void authenticate(Gateway gateway, String userAgent, StringTokenSupplier tokenSupplier) throws IOException, LeagueException;
 }

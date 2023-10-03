@@ -10,9 +10,7 @@ import com.hawolt.http.auth.Gateway;
 import com.hawolt.http.integrity.Diffuser;
 import com.hawolt.http.layer.IResponse;
 import com.hawolt.version.local.LocalRiotFileVersion;
-import com.hawolt.virtual.client.ILoginStateConsumer;
-import com.hawolt.virtual.client.RiotClientException;
-import com.hawolt.virtual.client.RiotClientExceptionType;
+import com.hawolt.virtual.client.*;
 import com.hawolt.virtual.misc.Authorizable;
 import com.hawolt.virtual.riotclient.client.VirtualRiotClient;
 import okhttp3.Request;
@@ -43,7 +41,14 @@ public class AbstractVirtualRiotClientInstance implements IVirtualRiotClientInst
         this.gateway = gateway;
     }
 
-    public VirtualRiotClient login(String username, String password, MultiFactorSupplier multifactor, CaptchaSupplier captchaSupplier) throws IOException, RiotClientException, CaptchaException, InterruptedException {
+    public VirtualRiotClient login(
+            String username,
+            String password,
+            MultiFactorSupplier multifactor,
+            CaptchaSupplier captchaSupplier,
+            InitialPlatformCallback platformCallback,
+            InitialNameCallback nameCallback
+    ) throws IOException, RiotClientException, CaptchaException, InterruptedException {
         if (!cookieSupplier.isInCompletedState()) {
             if (!cookieSupplier.has("__cf_bm")) cookieSupplier.configure(getRiotClientUserAgent("rso-auth"));
             if (cookieSupplier.has("__cf_bm")) cookieSupplier.configure(getRiotClientUserAgent("rso-auth"));
@@ -57,7 +62,15 @@ public class AbstractVirtualRiotClientInstance implements IVirtualRiotClientInst
             this.cookieSupplier.handle(getSSID(token));
         }
         this.tokenSupplier = getTokenSupplier(getAuthorizationSupplier().get());
-        return new VirtualRiotClient(this, username, password, multifactor, captchaSupplier);
+        return new VirtualRiotClient(
+                this,
+                username,
+                password,
+                multifactor,
+                captchaSupplier,
+                platformCallback,
+                nameCallback
+        );
     }
 
     private String submit(String token) {

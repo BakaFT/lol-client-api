@@ -10,6 +10,7 @@ import com.hawolt.virtual.clientconfig.impl.PublicClientConfig;
 import com.hawolt.virtual.clientconfig.impl.redge.RedgeConfig;
 import com.hawolt.virtual.clientconfig.impl.redge.RedgeType;
 import com.hawolt.virtual.leagueclient.authentication.RefreshableTokenSetup;
+import com.hawolt.virtual.leagueclient.exception.LeagueException;
 import com.hawolt.virtual.leagueclient.userinfo.UserInformation;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -34,11 +35,17 @@ public class Session extends RefreshableTokenSetup {
 
 
     @Override
-    public void authenticate(Gateway gateway, String userAgent, StringTokenSupplier tokenSupplier) throws IOException {
+    public void authenticate(Gateway gateway, String userAgent, StringTokenSupplier tokenSupplier) throws IOException, LeagueException {
         JSONObject payload = new JSONObject();
         payload.put("product", "lol");
-        payload.put("puuid", userInformation.getSub());
-        payload.put("region", userInformation.getUserInformationLeague().getCPID().toLowerCase());
+        payload.put("puuid", userInformation.getPUUID());
+        payload.put("region",
+                userInformation.getUserInformationLeagueRegion().orElseThrow(
+                        () -> new LeagueException(LeagueException.ErrorType.BAD_USERINFORMATION)
+                ).getActiveAccount().orElseThrow(
+                        () -> new LeagueException(LeagueException.ErrorType.BAD_USERINFORMATION)
+                ).getCPID()
+        );
         JSONObject claims = new JSONObject();
         claims.put("cname", "lcu");
         payload.put("claims", claims);

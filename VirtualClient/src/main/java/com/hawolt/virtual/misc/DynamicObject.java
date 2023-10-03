@@ -18,10 +18,12 @@ public class DynamicObject extends JSONObject {
     }
 
     public <T> T convert(Object o) {
+        if (o == null) return null;
         return Unsafe.cast(o);
     }
 
     public <T> T getByKey(String key) {
+        if (!has(key) || isNull(key)) return null;
         return convert(get(key));
     }
 

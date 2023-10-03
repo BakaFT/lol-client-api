@@ -7,7 +7,7 @@ package com.hawolt.virtual.leagueclient.exception;
 
 public class LeagueException extends Exception {
     public enum ErrorType {
-        NO_LEAGUE_ACCOUNT, NO_SUMMONER_NAME
+        BAD_USERINFORMATION, FAILED_TO_INITIALIZE, UNSUCCESSFUL_INITIALIZATION
     }
 
     private final ErrorType type;

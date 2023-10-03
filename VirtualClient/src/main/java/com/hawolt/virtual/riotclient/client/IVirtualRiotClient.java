@@ -1,6 +1,8 @@
 package com.hawolt.virtual.riotclient.client;
 
 import com.hawolt.generic.token.impl.StringTokenSupplier;
+import com.hawolt.virtual.client.InitialNameCallback;
+import com.hawolt.virtual.client.InitialPlatformCallback;
 import com.hawolt.virtual.leagueclient.authentication.impl.Entitlement;
 import com.hawolt.virtual.leagueclient.exception.LeagueException;
 import com.hawolt.virtual.leagueclient.instance.VirtualLeagueClientInstance;
@@ -23,7 +25,11 @@ public interface IVirtualRiotClient {
 
     VirtualLeagueClientInstance createVirtualLeagueClientInstance() throws LeagueException, IOException;
 
+    InitialPlatformCallback getInitialPlatformCallback();
+
     MultiFactorSupplier getMultifactorSupplier();
+
+    InitialNameCallback getInitialNameCallback();
 
     StringTokenSupplier getRiotClientSupplier();
 

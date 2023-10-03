@@ -12,6 +12,7 @@ import com.hawolt.virtual.leagueclient.userinfo.UserInformation;
 import com.hawolt.virtual.riotclient.client.IVirtualRiotClient;
 import com.hawolt.yaml.IYamlSupplier;
 
+import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -20,7 +21,7 @@ import java.util.concurrent.CompletableFuture;
  **/
 
 public interface IVirtualLeagueClientInstance {
-    CompletableFuture<VirtualLeagueClient> login(boolean ignoreSummoner, boolean selfRefresh, boolean complete, boolean minimal) throws LeagueException;
+    CompletableFuture<VirtualLeagueClient> login(boolean ignoreSummoner, boolean selfRefresh, boolean complete, boolean minimal) throws LeagueException, IOException;
 
     LocalLeagueFileVersion getLocalLeagueFileVersion();
 
