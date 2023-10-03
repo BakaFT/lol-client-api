@@ -124,6 +124,7 @@ public class UserInformation extends DynamicObject {
     }
 
     public Optional<UserInformationLeagueRegion> getUserInformationLeagueRegion() {
+        System.err.println(userInformationLeagueRegion == null);
         if (userInformationLeagueRegion != null) return Optional.of(userInformationLeagueRegion);
         this.userInformationLeagueRegion = new UserInformationLeagueRegion(getByKey("lol_region"));
         return Optional.of(userInformationLeagueRegion);
@@ -138,8 +139,9 @@ public class UserInformation extends DynamicObject {
         object.put("pid", reference.getString("original_platform_id"));
         object.put("lp", false);
         object.put("active", true);
-        put("lol_region", object);
         JSONArray custom = new JSONArray().put(object);
+        put("lol_region", custom);
+        System.err.println(custom);
         userInformationLeagueRegion = new UserInformationLeagueRegion(custom);
     }
 
