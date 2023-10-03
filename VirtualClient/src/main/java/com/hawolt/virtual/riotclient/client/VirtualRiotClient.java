@@ -2,8 +2,8 @@ package com.hawolt.virtual.riotclient.client;
 
 import com.hawolt.generic.token.impl.StringTokenSupplier;
 import com.hawolt.logger.Logger;
-import com.hawolt.virtual.client.InitialNameCallback;
-import com.hawolt.virtual.client.InitialPlatformCallback;
+import com.hawolt.virtual.client.InitialNameSupplier;
+import com.hawolt.virtual.client.InitialPlatformSupplier;
 import com.hawolt.virtual.leagueclient.authentication.impl.Entitlement;
 import com.hawolt.virtual.leagueclient.authentication.impl.Userinfo;
 import com.hawolt.virtual.leagueclient.instance.VirtualLeagueClientInstance;
@@ -29,9 +29,9 @@ import java.util.List;
  **/
 
 public class VirtualRiotClient implements IVirtualRiotClient, IRefreshable {
-    private final InitialPlatformCallback platformCallback;
+    private final InitialPlatformSupplier platformCallback;
     private final IVirtualRiotClientInstance instance;
-    private final InitialNameCallback nameCallback;
+    private final InitialNameSupplier nameCallback;
     private final MultiFactorSupplier multifactor;
     private final CaptchaSupplier captchaSupplier;
     private final String username, password;
@@ -49,8 +49,8 @@ public class VirtualRiotClient implements IVirtualRiotClient, IRefreshable {
             String password,
             MultiFactorSupplier multifactor,
             CaptchaSupplier captchaSupplier,
-            InitialPlatformCallback platformCallback,
-            InitialNameCallback nameCallback
+            InitialPlatformSupplier platformCallback,
+            InitialNameSupplier nameCallback
     ) {
         this.riotClientSupplier = instance.getRiotClientTokenSupplier();
         this.platformCallback = platformCallback;
@@ -64,7 +64,7 @@ public class VirtualRiotClient implements IVirtualRiotClient, IRefreshable {
 
 
     @Override
-    public InitialPlatformCallback getInitialPlatformCallback() {
+    public InitialPlatformSupplier getInitialPlatformCallback() {
         return platformCallback;
     }
 
@@ -124,7 +124,7 @@ public class VirtualRiotClient implements IVirtualRiotClient, IRefreshable {
     }
 
     @Override
-    public InitialNameCallback getInitialNameCallback() {
+    public InitialNameSupplier getInitialNameCallback() {
         return nameCallback;
     }
 

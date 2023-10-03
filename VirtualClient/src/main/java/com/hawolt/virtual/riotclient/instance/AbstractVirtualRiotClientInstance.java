@@ -46,8 +46,8 @@ public class AbstractVirtualRiotClientInstance implements IVirtualRiotClientInst
             String password,
             MultiFactorSupplier multifactor,
             CaptchaSupplier captchaSupplier,
-            InitialPlatformCallback platformCallback,
-            InitialNameCallback nameCallback
+            InitialPlatformSupplier platformCallback,
+            InitialNameSupplier nameCallback
     ) throws IOException, RiotClientException, CaptchaException, InterruptedException {
         if (!cookieSupplier.isInCompletedState()) {
             if (!cookieSupplier.has("__cf_bm")) cookieSupplier.configure(getRiotClientUserAgent("rso-auth"));

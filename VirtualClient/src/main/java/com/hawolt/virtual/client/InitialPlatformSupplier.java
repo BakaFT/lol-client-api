@@ -7,8 +7,8 @@ import com.hawolt.generic.data.Platform;
  * Author: Twitter @hawolt
  **/
 
-public interface InitialPlatformCallback {
-    InitialPlatformCallback BLANK = () -> {
+public interface InitialPlatformSupplier {
+    InitialPlatformSupplier BLANK = () -> {
         throw new RuntimeException("Please manually implement InitialPlatformCallback");
     };
 

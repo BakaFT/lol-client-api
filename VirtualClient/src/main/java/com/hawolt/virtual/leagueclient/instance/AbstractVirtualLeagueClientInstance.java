@@ -281,7 +281,7 @@ public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClient
                         nameless = account.getSummonerName().isEmpty();
                     }
                     if (nameless) {
-                        String name = virtualRiotClient.getInitialNameCallback().getInitialName(this);
+                        String name = virtualRiotClient.getInitialNameCallback().getInitialName(virtualLeagueClient);
                         userInformation.setUserInformationLeagueAccount(name);
                     }
                 }
