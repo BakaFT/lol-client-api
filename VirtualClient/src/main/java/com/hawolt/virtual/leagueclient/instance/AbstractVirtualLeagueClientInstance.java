@@ -96,7 +96,9 @@ public class AbstractVirtualLeagueClientInstance implements IVirtualLeagueClient
     }
 
     private void configure(UserInformation userInformation) throws LeagueException {
-        this.platformId = userInformation.getUserInformationLeague().orElseThrow(
+        this.platformId = userInformation.getUserInformationLeagueRegion().orElseThrow(
+                () -> new LeagueException(LeagueException.ErrorType.BAD_USERINFORMATION)
+        ).getActiveAccount().orElseThrow(
                 () -> new LeagueException(LeagueException.ErrorType.BAD_USERINFORMATION)
         ).getCPID();
         this.platform = Platform.valueOf(platformId);
