@@ -197,7 +197,10 @@ public class UserInformation extends DynamicObject {
         account.put("summoner_name", name);
         account.put("summoner_level", 1);
         account.put("profile_icon", 29);
-        account.put("summoner_id", userInformationLeague.getCUID());
+        Optional<UserInformationLeagueRegionAccount> optional = userInformationLeagueRegion.getActiveAccount();
+        optional.ifPresent(userInformationLeagueRegionAccount ->
+                account.put("summoner_id", userInformationLeagueRegionAccount.getCUID())
+        );
         put("lol_account", account);
     }
 }
