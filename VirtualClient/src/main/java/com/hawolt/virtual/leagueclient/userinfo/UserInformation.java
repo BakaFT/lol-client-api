@@ -13,47 +13,16 @@ import java.util.Optional;
  **/
 
 public class UserInformation extends DynamicObject {
+    private UserInformationLeagueAccount userInformationLeagueAccount;
     private UserInformationLeagueRegion userInformationLeagueRegion;
     private UserInformationPassword userInformationPassword;
     private UserInformationAccount userInformationAccount;
+    private UserInformationRegion userInformationRegion;
     private UserInformationLeague userInformationLeague;
     private UserInformationBan userInformationBan;
-    private UserInformationLeagueAccount userInformationLeagueAccount;
-    private UserInformationRegion userInformationRegion;
-    private Object photo, countryAt, pPID, playerPLocale;
 
     public UserInformation(JSONObject o) {
         super(o);
-
-        /*
-        this.country = o.getString("country");
-        this.sub = o.getString("sub");
-        if (!o.isNull("lol_account")) {
-            this.userInformationLeagueAccount = new UserInformationLeagueAccount(o.getJSONObject("lol_account"));
-        }
-        this.emailVerified = o.getBoolean("email_verified");
-        if (o.has("player_plocale")) this.playerPLocale = o.get("player_plocale");
-        if (o.has("country_at")) this.countryAt = o.get("country_at");
-        this.userInformationPassword = new UserInformationPassword(o.getJSONObject("pw"));
-        if (!o.isNull("lol")) {
-            this.userInformationLeague = new UserInformationLeague(o.getJSONObject("lol"));
-        }
-        this.originalPlatformId = o.getString("original_platform_id");
-        this.originalAccountId = o.getLong("original_account_id");
-        this.phoneVerified = o.getBoolean("phone_number_verified");
-        if (o.has("photo")) this.photo = o.get("photo");
-        this.preferredUsername = o.getString("preferred_username");
-        this.userInformationBan = new UserInformationBan(o.getJSONObject("ban"));
-        if (o.has("pPID")) this.pPID = o.get("pPID");
-        this.userInformationLeagueRegion = new UserInformationLeagueRegion(o.getJSONArray("lol_region"));
-        this.playerLocale = o.get("player_locale");
-        this.pvpnetAccountId = o.getLong("pvpnet_account_id");
-        if (!o.isNull("region")) {
-            this.userInformationRegion = new UserInformationRegion(o.getJSONObject("region"));
-        }
-        this.userInformationAccount = new UserInformationAccount(o.getJSONObject("acct"));
-        this.jti = o.getString("jti");
-        this.username = o.getString("username");*/
     }
 
     public String getCountry() {
@@ -184,11 +153,11 @@ public class UserInformation extends DynamicObject {
 
 
     public boolean isLeagueRegionAssociated() {
-        return getUserInformationLeague().isPresent();
+        return getUserInformationLeagueRegion().isPresent();
     }
 
     public boolean isLeagueAccountAssociated() {
-        return getUserInformationLeague().isPresent();
+        return getUserInformationLeagueAccount().isPresent();
     }
 
 
