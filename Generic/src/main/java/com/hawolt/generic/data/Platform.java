@@ -21,7 +21,8 @@ public enum Platform {
     LA1("LA1"),
     TR1("TR"),
     SG2("SG2"),
-    TH2("TH2");
+    TH2("TH2"),
+    PBE1("PBE1");
     final String friendlyName;
 
     Platform(String friendlyName) {
